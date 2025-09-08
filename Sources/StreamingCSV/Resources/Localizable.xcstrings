@@ -1,0 +1,57 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Check that the URL is properly formatted and uses the correct scheme (file://, http://, or https://)." : {
+      "comment" : "Invalid URL error suggestion"
+    },
+    "Check your network connection and ensure the URL is accessible." : {
+      "comment" : "Network error suggestion"
+    },
+    "CSV Encoding Error" : {
+      "comment" : "Error when CSV encoding/decoding fails",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CSV Encoding Error"
+          }
+        }
+      }
+    },
+    "Ensure the file is saved with the correct text encoding and contains valid characters for that encoding." : {
+      "comment" : "CSV encoding error suggestion",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ensure the file is saved with the correct text encoding and contains valid characters for that encoding."
+          }
+        }
+      }
+    },
+    "Failed to download data from the network." : {
+      "comment" : "Network error reason"
+    },
+    "Invalid URL" : {
+      "comment" : "Error when URL is invalid"
+    },
+    "Network Error" : {
+      "comment" : "Error during network operation"
+    },
+    "The data could not be encoded or decoded using the specified text encoding." : {
+      "comment" : "CSV encoding error reason",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The data could not be encoded or decoded using the specified text encoding."
+          }
+        }
+      }
+    },
+    "The URL provided is not valid or uses an unsupported scheme." : {
+      "comment" : "Invalid URL error reason"
+    }
+  },
+  "version" : "1.0"
+}

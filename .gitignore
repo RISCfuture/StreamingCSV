@@ -1,0 +1,10 @@
+# Swift
+/.build
+.swiftpm
+
+# Documentation
+/docs
+/.docc-build
+
+# SwiftLint
+.swiftlint/RemoteConfigCache

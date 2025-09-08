@@ -1,0 +1,3 @@
+- This project uses Swift Package Manager.
+- Tests are powered by Swift Testing, using the `#expect` and `#require` macros.
+- This project adheres to the Swift 6 concurrency model. Use actors and Sendable types where appropriate, and avoid `@unchecked Sendable` and `nonisolated` keywords.
