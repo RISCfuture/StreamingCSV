@@ -6,9 +6,8 @@ extension String: CSVCodable {
     public var csvString: String { self }
 
     public init?(csvString: String) {
-        // Just trim whitespace, don't return nil for empty strings
-        // as that would break required fields
-        self = csvString.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Don't trim - let the application decide how to handle whitespace
+        self = csvString
     }
 }
 
@@ -18,6 +17,7 @@ extension Int: CSVCodable {
     public var csvString: String { String(self) }
 
     public init?(csvString: String) {
+        // Trim for numeric parsing since Swift's Int() doesn't handle whitespace
         guard let value = Int(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
             return nil
         }
@@ -154,8 +154,8 @@ extension Bool: CSVCodable {
     public var csvString: String { self ? "true" : "false" }
 
     public init?(csvString: String) {
-        let trimmed = csvString.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        switch trimmed {
+        // Trim and lowercase for boolean parsing
+        switch csvString.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
         case "true", "yes", "1", "y", "t":
             self = true
         case "false", "no", "0", "n", "f":
@@ -174,6 +174,7 @@ extension Data: CSVCodable {
     }
 
     public init?(csvString: String) {
+        // Trim for base64 parsing
         guard let data = Data(base64Encoded: csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
             return nil
         }
