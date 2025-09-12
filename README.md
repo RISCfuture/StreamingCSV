@@ -15,10 +15,12 @@ processes data row by row without loading entire files into memory.
 - 🔒 **Type Safety**: Use Swift's type system with automatic CSV
   serialization/deserialization
 - ⚡ **Swift Concurrency**: Built with async/await for modern Swift apps
-- 🎯 **Swift Macros**: Eliminate boilerplate with `@CSVRowBuilder` and `@Field`
-  macros
+- 🎯 **Swift Macros**: Eliminate boilerplate with `@CSVRowBuilder`, `@Field`,
+  and `@Fields` macros
 - ✨ **Robust Parsing**: Handles quoted fields, escaped characters, and
   multi-line values
+- 📦 **Array Fields**: Handle variable-length CSV formats with `@Fields` for
+  array properties
 
 ## Installation
 
@@ -126,6 +128,33 @@ struct Product {
 // CSV: "1,Widget,,9.99,7.99"
 // Result: description = nil, discountPrice = 7.99
 ```
+
+### Working with Array Fields
+
+Use `@Fields` to handle CSV formats with array fields or variable-length rows:
+
+```swift
+@CSVRowBuilder
+struct TestResult {
+    @Field var studentId: String
+    @Field var name: String
+    @Fields(5) var scores: [Int]  // Fixed 5 score fields with padding
+    @Field var grade: String
+}
+
+@CSVRowBuilder
+struct FlexibleRecord {
+    @Field var id: String
+    @Field var type: String
+    @Fields var tags: [String]  // Collects all remaining fields
+}
+```
+
+The `@Fields` macro provides two modes:
+- `@Fields(n)` - Collects exactly n fields, padding with empty strings on output
+- `@Fields` - Collects all remaining fields (must be the last property)
+
+For detailed examples and advanced usage, see the [Advanced Usage](https://riscfuture.github.io/StreamingCSV/documentation/streamingcsv/advancedusage#Working-with-Array-Fields) documentation.
 
 ## Reading from Different Sources
 

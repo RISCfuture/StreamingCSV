@@ -5,6 +5,7 @@ import SwiftSyntaxMacros
 struct StreamingCSVMacrosPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
         CSVRowBuilderMacro.self,
-        FieldMacro.self
+        FieldMacro.self,
+        FieldsMacro.self
     ]
 }

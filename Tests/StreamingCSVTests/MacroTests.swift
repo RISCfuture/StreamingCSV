@@ -33,6 +33,40 @@ struct Product {
     }
 }
 
+// Test structs for @Fields functionality
+@CSVRowBuilder
+struct ScoreRecord {
+    @Field var id: String
+    @Field var name: String
+    @Fields(3)
+    var scores: [Int]
+    @Field var grade: String
+}
+
+@CSVRowBuilder
+struct FlexibleRecord {
+    @Field var id: String
+    @Field var name: String
+    @Fields var tags: [String]
+}
+
+@CSVRowBuilder
+struct ComplexRecord {
+    @Field var id: String
+    @Field var name: String
+    @Fields(2)
+    var primaryScores: [Int]
+    @Fields var additionalData: [String]
+}
+
+@CSVRowBuilder
+struct OptionalFieldsRecord {
+    @Field var id: String
+    @Fields(3)
+    var values: [Double]
+    @Field var status: Bool
+}
+
 @Suite("CSV Macro Tests")
 struct CSVMacroTests {
 
@@ -138,6 +172,94 @@ struct CSVMacroTests {
         #expect(content.contains("Charlie,22,91.0"))
 
         try FileManager.default.removeItem(at: tempURL)
+    }
+
+    @Test
+    func testFieldsWithFixedCount() throws {
+        // Test parsing with all fields present
+        let record1 = ScoreRecord(from: ["001", "Alice", "85", "90", "88", "A"])
+        #expect(record1 != nil)
+        #expect(record1?.id == "001")
+        #expect(record1?.name == "Alice")
+        #expect(record1?.scores.count == 3)
+        #expect(record1?.scores == [85, 90, 88])
+        #expect(record1?.grade == "A")
+
+        // Test parsing with fewer scores than expected
+        let record2 = ScoreRecord(from: ["002", "Bob", "95", "", "", "B"])
+        #expect(record2 != nil)
+        #expect(record2?.scores.count == 1)  // Only one valid score
+        #expect(record2?.scores == [95])
+        #expect(record2?.grade == "B")
+
+        // Test serialization with padding
+        if let record2 {
+            let row = record2.toCSVRow()
+            #expect(row == ["002", "Bob", "95", "", "", "B"])  // Padded to 3 score fields
+        }
+
+        // Test with all empty scores
+        let record3 = try #require(ScoreRecord(from: ["003", "Charlie", "", "", "", "C"]))
+        #expect(record3.scores.isEmpty)
+        #expect(record3.grade == "C")
+    }
+
+    @Test
+    func testFieldsWithRemainingFields() throws {
+        // Test with no extra fields
+        let record1 = try #require(FlexibleRecord(from: ["001", "Item1"]))
+        #expect(record1.tags.isEmpty)
+
+        // Test with some extra fields
+        let record2 = FlexibleRecord(from: ["002", "Item2", "tag1", "tag2", "tag3"])
+        #expect(record2 != nil)
+        #expect(record2?.tags == ["tag1", "tag2", "tag3"])
+
+        // Test serialization (no padding for parameterless @Fields)
+        if let record2 {
+            let row = record2.toCSVRow()
+            #expect(row == ["002", "Item2", "tag1", "tag2", "tag3"])
+        }
+    }
+
+    @Test
+    func testFieldsCombined() throws {
+        // Test parsing
+        let record = ComplexRecord(from: ["001", "Test", "100", "95", "extra1", "extra2", "extra3"])
+        #expect(record != nil)
+        #expect(record?.primaryScores == [100, 95])
+        #expect(record?.additionalData == ["extra1", "extra2", "extra3"])
+
+        // Test serialization with padding for @Fields(2)
+        if let record {
+            let row = record.toCSVRow()
+            #expect(row == ["001", "Test", "100", "95", "extra1", "extra2", "extra3"])
+        }
+
+        // Test with missing primary scores
+        let record2 = ComplexRecord(from: ["002", "Test2", "80", "", "data1"])
+        #expect(record2 != nil)
+        #expect(record2?.primaryScores == [80])
+        #expect(record2?.additionalData == ["data1"])
+
+        if let record2 {
+            let row = record2.toCSVRow()
+            #expect(row == ["002", "Test2", "80", "", "data1"])  // Padded primary scores
+        }
+    }
+
+    @Test
+    func testFieldsWithOptionalTypes() throws {
+        let record = OptionalFieldsRecord(from: ["001", "1.5", "2.5", "3.5", "true"])
+        #expect(record != nil)
+        #expect(record?.values == [1.5, 2.5, 3.5])
+        #expect(record?.status == true)
+
+        // Test with invalid numbers (should skip)
+        let record2 = OptionalFieldsRecord(from: ["002", "4.5", "invalid", "5.5", "false"])
+        #expect(record2 != nil)
+        #expect(record2?.values == [4.5, 5.5])  // "invalid" is skipped
+        #expect(record2?.status == false)
     }
 
     @Test

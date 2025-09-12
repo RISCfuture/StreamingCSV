@@ -47,6 +47,84 @@ let writer = try StreamingCSVWriter(
 )
 ```
 
+## Working with Array Fields
+
+Use the `@Fields` macro to handle CSV formats with array fields or variable-length rows:
+
+### Fixed-Size Arrays with Padding
+
+Use `@Fields(n)` to specify that exactly n fields should be collected into an array. When writing back to CSV, the array will be padded with empty strings if it contains fewer than n elements:
+
+```swift
+@CSVRowBuilder
+struct TestResult {
+    @Field var studentId: String
+    @Field var name: String
+    @Fields(5) var scores: [Int]  // Always 5 score fields
+    @Field var grade: String
+}
+
+// Reading CSV
+let result = TestResult(from: ["001", "Alice", "85", "90", "88", "92", "95", "A"])
+// result.scores = [85, 90, 88, 92, 95]
+
+// Partial data
+let partial = TestResult(from: ["002", "Bob", "78", "82", "", "", "", "B"])
+// partial.scores = [78, 82]  // Empty fields are skipped
+
+// Writing CSV
+let row = partial.toCSVRow()
+// Returns: ["002", "Bob", "78", "82", "", "", "", "B"]  // Padded to 5 score fields
+```
+
+### Variable-Length Arrays
+
+Use parameterless `@Fields` to collect all remaining fields into an array. This must be the last field in your struct:
+
+```swift
+@CSVRowBuilder
+struct FlexibleRecord {
+    @Field var id: String
+    @Field var name: String
+    @Fields var tags: [String]  // Collects all remaining fields
+}
+
+// Reading CSV with varying numbers of tags
+let record1 = FlexibleRecord(from: ["001", "Item1", "tag1", "tag2", "tag3"])
+// record1.tags = ["tag1", "tag2", "tag3"]
+
+let record2 = FlexibleRecord(from: ["002", "Item2"])
+// record2.tags = []  // No extra fields
+
+// Writing CSV - no padding for parameterless @Fields
+let row = record1.toCSVRow()
+// Returns: ["001", "Item1", "tag1", "tag2", "tag3"]
+```
+
+### Combining Fixed and Variable Arrays
+
+You can use both `@Fields(n)` and `@Fields` in the same struct for complex CSV formats:
+
+```swift
+@CSVRowBuilder
+struct DataRecord {
+    @Field var id: String
+    @Field var type: String
+    @Fields(3) var primaryValues: [Double]  // Fixed 3 slots with padding
+    @Fields var metadata: [String]          // All remaining fields
+}
+
+// Reading complex CSV
+let record = DataRecord(from: ["001", "TypeA", "1.5", "2.5", "3.5", "meta1", "meta2", "meta3"])
+// record.primaryValues = [1.5, 2.5, 3.5]
+// record.metadata = ["meta1", "meta2", "meta3"]
+
+// Writing with padding for fixed fields only
+let sparse = DataRecord(from: ["002", "TypeB", "4.5", "", "", "extra"])
+let row = sparse.toCSVRow()
+// Returns: ["002", "TypeB", "4.5", "", "", "extra"]  // primaryValues padded to 3
+```
+
 ## Using AsyncSequence for Advanced Iteration
 
 StreamingCSV provides AsyncSequence support for more idiomatic Swift iteration with advanced operators:
