@@ -1,5 +1,7 @@
 import Foundation
 
+// swiftlint:disable missing_docs
+
 // MARK: - String
 
 extension String: CSVCodable {
@@ -182,6 +184,152 @@ extension Data: CSVCodable {
     }
 }
 
+// MARK: - RawRepresentable
+
+// Provide default implementations for RawRepresentable types
+// Note: Types must still explicitly declare conformance to CSVCodable/CSVEncodable/CSVDecodable
+
+// String raw values
+public extension CSVEncodable where Self: RawRepresentable, RawValue == String {
+    var csvString: String {
+        rawValue
+    }
+}
+
+public extension CSVDecodable where Self: RawRepresentable, RawValue == String {
+    init?(csvString: String) {
+        // Don't trim - let the application handle whitespace
+        self.init(rawValue: csvString)
+    }
+}
+
+// Int raw values
+public extension CSVEncodable where Self: RawRepresentable, RawValue == Int {
+    var csvString: String { String(rawValue) }
+}
+public extension CSVDecodable where Self: RawRepresentable, RawValue == Int {
+    init?(csvString: String) {
+        guard let value = Int(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else { return nil }
+        self.init(rawValue: value)
+    }
+}
+
+// Int8 raw values
+public extension CSVEncodable where Self: RawRepresentable, RawValue == Int8 {
+    var csvString: String { String(rawValue) }
+}
+public extension CSVDecodable where Self: RawRepresentable, RawValue == Int8 {
+    init?(csvString: String) {
+        guard let value = Int8(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else { return nil }
+        self.init(rawValue: value)
+    }
+}
+
+// Int16 raw values
+public extension CSVEncodable where Self: RawRepresentable, RawValue == Int16 {
+    var csvString: String { String(rawValue) }
+}
+public extension CSVDecodable where Self: RawRepresentable, RawValue == Int16 {
+    init?(csvString: String) {
+        guard let value = Int16(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else { return nil }
+        self.init(rawValue: value)
+    }
+}
+
+// Int32 raw values  
+public extension CSVEncodable where Self: RawRepresentable, RawValue == Int32 {
+    var csvString: String { String(rawValue) }
+}
+public extension CSVDecodable where Self: RawRepresentable, RawValue == Int32 {
+    init?(csvString: String) {
+        guard let value = Int32(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else { return nil }
+        self.init(rawValue: value)
+    }
+}
+
+// Int64 raw values
+public extension CSVEncodable where Self: RawRepresentable, RawValue == Int64 {
+    var csvString: String { String(rawValue) }
+}
+public extension CSVDecodable where Self: RawRepresentable, RawValue == Int64 {
+    init?(csvString: String) {
+        guard let value = Int64(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else { return nil }
+        self.init(rawValue: value)
+    }
+}
+
+// UInt raw values
+public extension CSVEncodable where Self: RawRepresentable, RawValue == UInt {
+    var csvString: String { String(rawValue) }
+}
+public extension CSVDecodable where Self: RawRepresentable, RawValue == UInt {
+    init?(csvString: String) {
+        guard let value = UInt(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else { return nil }
+        self.init(rawValue: value)
+    }
+}
+
+// UInt8 raw values
+public extension CSVEncodable where Self: RawRepresentable, RawValue == UInt8 {
+    var csvString: String { String(rawValue) }
+}
+public extension CSVDecodable where Self: RawRepresentable, RawValue == UInt8 {
+    init?(csvString: String) {
+        guard let value = UInt8(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else { return nil }
+        self.init(rawValue: value)
+    }
+}
+
+// UInt16 raw values
+public extension CSVEncodable where Self: RawRepresentable, RawValue == UInt16 {
+    var csvString: String { String(rawValue) }
+}
+public extension CSVDecodable where Self: RawRepresentable, RawValue == UInt16 {
+    init?(csvString: String) {
+        guard let value = UInt16(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else { return nil }
+        self.init(rawValue: value)
+    }
+}
+
+// UInt32 raw values
+public extension CSVEncodable where Self: RawRepresentable, RawValue == UInt32 {
+    var csvString: String { String(rawValue) }
+}
+public extension CSVDecodable where Self: RawRepresentable, RawValue == UInt32 {
+    init?(csvString: String) {
+        guard let value = UInt32(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else { return nil }
+        self.init(rawValue: value)
+    }
+}
+
+// UInt64 raw values
+public extension CSVEncodable where Self: RawRepresentable, RawValue == UInt64 {
+    var csvString: String { String(rawValue) }
+}
+public extension CSVDecodable where Self: RawRepresentable, RawValue == UInt64 {
+    init?(csvString: String) {
+        guard let value = UInt64(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else { return nil }
+        self.init(rawValue: value)
+    }
+}
+
+// Character raw values
+public extension CSVEncodable where Self: RawRepresentable, RawValue == Character {
+    var csvString: String {
+        String(rawValue)
+    }
+}
+
+public extension CSVDecodable where Self: RawRepresentable, RawValue == Character {
+    init?(csvString: String) {
+        // Take first character after trimming
+        let trimmed = csvString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count == 1,
+              let firstChar = trimmed.first else { return nil }
+        self.init(rawValue: firstChar)
+    }
+}
+
 // MARK: - Optional
 
 extension Optional: CSVCodable where Wrapped: CSVCodable {
@@ -204,3 +352,5 @@ extension Optional: CSVCodable where Wrapped: CSVCodable {
         }
     }
 }
+
+// swiftlint:enable missing_docs

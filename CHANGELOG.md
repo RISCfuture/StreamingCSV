@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `CSVRow` protocol is now composed of `CSVDecodableRow` and `CSVEncodableRow`
+- Added `CSVCodable` conformance to common `RawRepresentable` enum types
 
 ### Fixed
 
