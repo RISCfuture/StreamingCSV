@@ -212,3 +212,95 @@ public macro Fields(_ count: Int) = #externalMacro(module: "StreamingCSVMacros",
  */
 @attached(peer)
 public macro Fields() = #externalMacro(module: "StreamingCSVMacros", type: "FieldsMacro")
+
+/**
+ A macro that automatically synthesizes ``CSVDecodableRow`` conformance for a struct.
+ 
+ `@CSVRowDecoderBuilder` generates only the `init?(from:)` method for types that
+ need to read CSV data but not write it. This is useful when working with read-only
+ CSV parsing scenarios.
+ 
+ ## Usage
+ Apply `@CSVRowDecoderBuilder` to a struct and mark the CSV fields with `@Field`:
+ 
+ ```swift
+ @CSVRowDecoderBuilder
+ struct Person {
+     @Field var name: String
+     @Field var age: Int
+     @Field var city: String
+     @Field var email: String?
+ }
+ ```
+ 
+ ## Generated Code
+ 
+ The macro generates:
+ 
+ - `init?(from fields: [String])` - Parses fields in declaration order
+ - `CSVDecodableRow` protocol conformance
+ 
+ ## Field Types
+ 
+ Fields must conform to ``CSVDecodable`` (not ``CSVCodable``). This allows you
+ to use types that can only be decoded from CSV, not encoded to it.
+ 
+ ## When to Use
+ 
+ Use `@CSVRowDecoderBuilder` when:
+
+ - You only need to parse CSV data, not generate it
+ - Your field types only conform to `CSVDecodable`, not `CSVCodable`
+ - You want to minimize protocol requirements for read-only scenarios
+ 
+ For bidirectional CSV support, use ``CSVRowBuilder()`` instead.
+ */
+@attached(member, names: named(init(from:)))
+@attached(extension, conformances: CSVDecodableRow)
+public macro CSVRowDecoderBuilder() = #externalMacro(module: "StreamingCSVMacros", type: "CSVRowDecoderBuilderMacro")
+
+/**
+ A macro that automatically synthesizes ``CSVEncodableRow`` conformance for a struct.
+ 
+ `@CSVRowEncoderBuilder` generates only the `toCSVRow()` method for types that
+ need to write CSV data but not read it. This is useful when generating CSV
+ output from data that originates from other sources.
+ 
+ ## Usage
+ Apply `@CSVRowEncoderBuilder` to a struct and mark the CSV fields with `@Field`:
+ 
+ ```swift
+ @CSVRowEncoderBuilder
+ struct Report {
+     @Field var timestamp: Date
+     @Field var status: String
+     @Field var value: Double
+     @Field var notes: String?
+ }
+ ```
+ 
+ ## Generated Code
+ 
+ The macro generates:
+ 
+ - `func toCSVRow() -> [String]` - Serializes fields in declaration order
+ - `CSVEncodableRow` protocol conformance
+ 
+ ## Field Types
+ 
+ Fields must conform to ``CSVEncodable`` (not ``CSVCodable``). This allows you
+ to use types that can only be encoded to CSV, not decoded from it.
+ 
+ ## When to Use
+ 
+ Use `@CSVRowEncoderBuilder` when:
+
+ - You only need to generate CSV data, not parse it
+ - Your field types only conform to `CSVEncodable`, not `CSVCodable`
+ - You want to minimize protocol requirements for write-only scenarios
+ 
+ For bidirectional CSV support, use ``CSVRowBuilder()`` instead.
+ */
+@attached(member, names: named(toCSVRow))
+@attached(extension, conformances: CSVEncodableRow)
+public macro CSVRowEncoderBuilder() = #externalMacro(module: "StreamingCSVMacros", type: "CSVRowEncoderBuilderMacro")

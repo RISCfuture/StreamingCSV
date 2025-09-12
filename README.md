@@ -75,10 +75,11 @@ try await writer.flush()
 
 ### Type-Safe CSV with Macros
 
-Define your data structure with the `@CSVRowBuilder` macro for type-safe CSV
+Define your data structure with the appropriate macro for type-safe CSV
 operations:
 
 ```swift
+// For bidirectional CSV operations
 @CSVRowBuilder
 struct Employee {
     @Field var id: Int
@@ -86,6 +87,24 @@ struct Employee {
     @Field var department: String
     @Field var salary: Double
     @Field var isActive: Bool
+}
+
+// For read-only CSV parsing (requires only CSVDecodable)
+@CSVRowDecoderBuilder
+struct ImportedUser {
+    @Field var username: String
+    @Field var email: String
+    @Field var joinDate: String
+    @Field var customField: CustomDecodableType  // Only needs CSVDecodable
+}
+
+// For write-only CSV generation (requires only CSVEncodable)
+@CSVRowEncoderBuilder
+struct ExportReport {
+    @Field var timestamp: String
+    @Field var metric: String
+    @Field var value: Double
+    @Field var customData: CustomEncodableType  // Only needs CSVEncodable
 }
 
 // Reading typed data

@@ -182,7 +182,7 @@ public actor StreamingCSVWriter {
     /**
      Writes a typed row to the CSV file.
      
-     This generic method accepts any type that conforms to ``CSVRow`` and
+     This generic method accepts any type that conforms to ``CSVEncodableRow`` and
      converts it to CSV format. The type must be able to serialize itself to an
      array of strings.
 
@@ -193,20 +193,17 @@ public actor StreamingCSVWriter {
      ## Example
 
      ```swift
-     struct Person: CSVRow {
-         let name: String
-         let age: Int
-         
-         func toCSVRow() -> [String] {
-             [name, String(age)]
-         }
+     @CSVRowEncoderBuilder
+     struct Person {
+         @Field var name: String
+         @Field var age: Int
      }
      
      let person = Person(name: "Jane", age: 25)
      try await writer.writeRow(person)
      ```
      */
-    public func writeRow<T: CSVRow>(_ row: T) async throws {
+    public func writeRow<T: CSVEncodableRow>(_ row: T) async throws {
         try await writeRow(row.toCSVRow())
     }
 

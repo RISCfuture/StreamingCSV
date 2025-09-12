@@ -355,7 +355,7 @@ public actor StreamingCSVReader {
      Reads the next row from the CSV file as a typed value.
 
      This generic method reads a row and attempts to parse it into the specified
-     type that conforms to ``CSVRow``. The type must be able to initialize from
+     type that conforms to ``CSVDecodableRow``. The type must be able to initialize from
      an array of string values.
 
      - Parameter type: The type to parse the row into.
@@ -367,9 +367,10 @@ public actor StreamingCSVReader {
      ## Example
 
      ```swift
-     struct Person: CSVRow {
-     let name: String
-     let age: Int
+     @CSVRowDecoderBuilder
+     struct Person {
+         @Field var name: String
+         @Field var age: Int
      }
 
      if let person = try await reader.readRow(as: Person.self) {
@@ -377,12 +378,10 @@ public actor StreamingCSVReader {
      }
      ```
      */
-    public func readRow<T: CSVRow>(as _: T.Type) async throws -> T? {
+    public func readRow<T: CSVDecodableRow>(as _: T.Type) async throws -> T? {
         guard let fields = try await readRow() else {
             return nil
         }
-        // Don't return nil if parsing fails - that's not EOF!
-        // Let the caller handle parsing failures
         return T(from: fields)
     }
 

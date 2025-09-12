@@ -25,6 +25,105 @@ extension Int: CSVCodable {
     }
 }
 
+extension Int8: CSVCodable {
+    public var csvString: String { String(self) }
+
+    public init?(csvString: String) {
+        guard let value = Int8(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            return nil
+        }
+        self = value
+    }
+}
+
+extension Int16: CSVCodable {
+    public var csvString: String { String(self) }
+
+    public init?(csvString: String) {
+        guard let value = Int16(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            return nil
+        }
+        self = value
+    }
+}
+
+extension Int32: CSVCodable {
+    public var csvString: String { String(self) }
+
+    public init?(csvString: String) {
+        guard let value = Int32(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            return nil
+        }
+        self = value
+    }
+}
+
+extension Int64: CSVCodable {
+    public var csvString: String { String(self) }
+
+    public init?(csvString: String) {
+        guard let value = Int64(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            return nil
+        }
+        self = value
+    }
+}
+
+extension UInt: CSVCodable {
+    public var csvString: String { String(self) }
+
+    public init?(csvString: String) {
+        guard let value = UInt(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            return nil
+        }
+        self = value
+    }
+}
+
+extension UInt8: CSVCodable {
+    public var csvString: String { String(self) }
+
+    public init?(csvString: String) {
+        guard let value = UInt8(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            return nil
+        }
+        self = value
+    }
+}
+
+extension UInt16: CSVCodable {
+    public var csvString: String { String(self) }
+
+    public init?(csvString: String) {
+        guard let value = UInt16(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            return nil
+        }
+        self = value
+    }
+}
+
+extension UInt32: CSVCodable {
+    public var csvString: String { String(self) }
+
+    public init?(csvString: String) {
+        guard let value = UInt32(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            return nil
+        }
+        self = value
+    }
+}
+
+extension UInt64: CSVCodable {
+    public var csvString: String { String(self) }
+
+    public init?(csvString: String) {
+        guard let value = UInt64(csvString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            return nil
+        }
+        self = value
+    }
+}
+
 // MARK: - Floating Point Types
 
 extension Double: CSVCodable {
@@ -84,7 +183,7 @@ extension Data: CSVCodable {
 
 // MARK: - Optional
 
-extension Optional: CSVEncodable where Wrapped: CSVEncodable {
+extension Optional: CSVCodable where Wrapped: CSVCodable {
     public var csvString: String {
         switch self {
         case .none:
@@ -93,9 +192,7 @@ extension Optional: CSVEncodable where Wrapped: CSVEncodable {
             value.csvString
         }
     }
-}
 
-extension Optional: CSVDecodable where Wrapped: CSVDecodable {
     public init?(csvString: String) {
         if csvString.isEmpty {
             self = .none

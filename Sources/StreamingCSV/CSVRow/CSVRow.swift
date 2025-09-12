@@ -1,12 +1,11 @@
 import Foundation
 
 /**
- A type that represents a complete CSV row with multiple fields.
+ A type that represents a complete CSV row with both reading and writing capabilities.
  
- Types conforming to `CSVRow` can be used with ``StreamingCSVReader/readRow()``
- and ``StreamingCSVWriter/writeRow(_:)`` for type-safe CSV operations. The
- protocol requires bidirectional conversion between the type and an array of
- string fields.
+ `CSVRow` combines ``CSVDecodableRow`` and ``CSVEncodableRow`` protocols for types
+ that need bidirectional CSV conversion. Types conforming to `CSVRow` can be used
+ with both ``StreamingCSVReader/readRow()`` and ``StreamingCSVWriter/writeRow(_:)``.
 
  ## Conforming to CSVRow
 
@@ -21,27 +20,11 @@ import Foundation
      @Field var city: String
  }
  ```
+ 
+ ## Choosing the Right Protocol
+ 
+ - Use ``CSVRow`` when you need both reading and writing capabilities
+ - Use ``CSVDecodableRow`` for read-only CSV parsing (requires only `CSVDecodable` types)
+ - Use ``CSVEncodableRow`` for write-only CSV generation (requires only `CSVEncodable` types)
  */
-public protocol CSVRow {
-    /**
-     Creates a new instance from an array of CSV field strings.
-     
-     Implementations should validate the input and return `nil` if the fields
-     cannot be parsed into a valid instance.
-     
-     - Parameter fields: An array of string values representing the CSV fields.
-     - Returns: A new instance if parsing succeeds, or `nil` if the fields are
-       invalid.
-     */
-    init?(from fields: [String])
-
-    /**
-     Converts this instance to an array of CSV field strings.
-     
-     The returned array should contain string representations of all fields
-     in the correct order for CSV output.
-     
-     - Returns: An array of string values representing the CSV fields.
-     */
-    func toCSVRow() -> [String]
-}
+public protocol CSVRow: CSVDecodableRow, CSVEncodableRow {}

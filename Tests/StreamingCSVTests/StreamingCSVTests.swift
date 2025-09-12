@@ -146,14 +146,11 @@ struct StreamingCSVReaderTests {
         // Skip header
         _ = try await reader.readRow()
 
-        let row1 = try await reader.readRow()
-        #expect(row1 != nil)
-        if let row1 {
-            #expect(row1.count == 3)
-            #expect(row1[0] == "Project Alpha")
-            #expect(row1[1].contains("multi-line") == true)
-            #expect(row1[2] == "5")
-        }
+        let row1 = try #require(await reader.readRow())
+        #expect(row1.count == 3)
+        #expect(row1[0] == "Project Alpha")
+        #expect(row1[1].contains("multi-line") == true)
+        #expect(row1[2] == "5")
     }
 
     @Test

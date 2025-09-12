@@ -10,10 +10,7 @@ struct ByteCSVParserTests {
         let parser = ByteCSVParser()
         let csvData = Data("Alice,30,New York\n".utf8)
 
-        let result = parser.parseRow(from: csvData)
-        #expect(result != nil)
-
-        let (row, consumed) = result!
+        let (row, consumed) = try #require(parser.parseRow(from: csvData))
         #expect(row.fields.count == 3)
         #expect(row.field(at: 0) == "Alice")
         #expect(row.field(at: 1) == "30")
@@ -26,10 +23,7 @@ struct ByteCSVParserTests {
         let parser = ByteCSVParser()
         let csvData = Data("\"Smith, John\",30,\"New York, NY\"\n".utf8)
 
-        let result = parser.parseRow(from: csvData)
-        #expect(result != nil)
-
-        let (row, _) = result!
+        let (row, _) = try #require(parser.parseRow(from: csvData))
         #expect(row.fields.count == 3)
         #expect(row.field(at: 0) == "Smith, John")
         #expect(row.field(at: 1) == "30")
@@ -41,10 +35,7 @@ struct ByteCSVParserTests {
         let parser = ByteCSVParser()
         let csvData = Data("\"She said \"\"Hello\"\"\",42,\"Test\"\n".utf8)
 
-        let result = parser.parseRow(from: csvData)
-        #expect(result != nil)
-
-        let (row, _) = result!
+        let (row, _) = try #require(parser.parseRow(from: csvData))
         #expect(row.fields.count == 3)
         #expect(row.field(at: 0) == "She said \"Hello\"")
         #expect(row.field(at: 1) == "42")
@@ -56,10 +47,7 @@ struct ByteCSVParserTests {
         let parser = ByteCSVParser()
         let csvData = Data("Alice,,30,,\n".utf8)
 
-        let result = parser.parseRow(from: csvData)
-        #expect(result != nil)
-
-        let (row, _) = result!
+        let (row, _) = try #require(parser.parseRow(from: csvData))
         #expect(row.fields.count == 5)
         #expect(row.field(at: 0) == "Alice")
         #expect(row.field(at: 1)?.isEmpty == true)
@@ -74,24 +62,21 @@ struct ByteCSVParserTests {
 
         // Test LF
         let lfData = Data("Alice,30\nBob,25".utf8)
-        let lfResult = parser.parseRow(from: lfData)
-        #expect(lfResult != nil)
-        #expect(lfResult!.row.field(at: 0) == "Alice")
-        #expect(lfResult!.consumedBytes == 9) // "Alice,30\n"
+        let lfResult = try #require(parser.parseRow(from: lfData))
+        #expect(lfResult.row.field(at: 0) == "Alice")
+        #expect(lfResult.consumedBytes == 9) // "Alice,30\n"
 
         // Test CRLF
         let crlfData = Data("Alice,30\r\nBob,25".utf8)
-        let crlfResult = parser.parseRow(from: crlfData)
-        #expect(crlfResult != nil)
-        #expect(crlfResult!.row.field(at: 0) == "Alice")
-        #expect(crlfResult!.consumedBytes == 10) // "Alice,30\r\n"
+        let crlfResult = try #require(parser.parseRow(from: crlfData))
+        #expect(crlfResult.row.field(at: 0) == "Alice")
+        #expect(crlfResult.consumedBytes == 10) // "Alice,30\r\n"
 
         // Test CR
         let crData = Data("Alice,30\rBob,25".utf8)
-        let crResult = parser.parseRow(from: crData)
-        #expect(crResult != nil)
-        #expect(crResult!.row.field(at: 0) == "Alice")
-        #expect(crResult!.consumedBytes == 9) // "Alice,30\r"
+        let crResult = try #require(parser.parseRow(from: crData))
+        #expect(crResult.row.field(at: 0) == "Alice")
+        #expect(crResult.consumedBytes == 9) // "Alice,30\r"
     }
 
     @Test("Parse multiline quoted fields")
@@ -99,10 +84,7 @@ struct ByteCSVParserTests {
         let parser = ByteCSVParser()
         let csvData = Data("\"Line 1\nLine 2\",42,\"Test\"\n".utf8)
 
-        let result = parser.parseRow(from: csvData)
-        #expect(result != nil)
-
-        let (row, _) = result!
+        let (row, _) = try #require(parser.parseRow(from: csvData))
         #expect(row.fields.count == 3)
         #expect(row.field(at: 0) == "Line 1\nLine 2")
         #expect(row.field(at: 1) == "42")
@@ -133,10 +115,7 @@ struct ByteCSVParserTests {
         let parser = ByteCSVParser(delimiter: ";", quote: "\"", escape: "\"")
         let csvData = Data("Alice;30;New York\n".utf8)
 
-        let result = parser.parseRow(from: csvData)
-        #expect(result != nil)
-
-        let (row, _) = result!
+        let (row, _) = try #require(parser.parseRow(from: csvData))
         #expect(row.fields.count == 3)
         #expect(row.field(at: 0) == "Alice")
         #expect(row.field(at: 1) == "30")
@@ -148,10 +127,7 @@ struct ByteCSVParserTests {
         let parser = ByteCSVParser()
         let csvData = Data("Alice,30,New York".utf8)
 
-        let result = parser.parseRow(from: csvData)
-        #expect(result != nil)
-
-        let (row, consumed) = result!
+        let (row, consumed) = try #require(parser.parseRow(from: csvData))
         #expect(row.fields.count == 3)
         #expect(row.field(at: 0) == "Alice")
         #expect(row.field(at: 1) == "30")
@@ -222,14 +198,12 @@ struct CSVByteBufferTests {
         #expect(buffer.readableBytes == testData.count)
         #expect(!buffer.isEmpty)
 
-        let readData = buffer.read(count: 5)
-        #expect(readData != nil)
-        #expect(String(data: readData!, encoding: .utf8) == "Hello")
+        let readData = try #require(buffer.read(count: 5))
+        #expect(String(data: readData, encoding: .utf8) == "Hello")
         #expect(buffer.readableBytes == testData.count - 5)
 
-        let remainingData = buffer.read(count: 100)
-        #expect(remainingData != nil)
-        #expect(String(data: remainingData!, encoding: .utf8) == ", World!")
+        let remainingData = try #require(buffer.read(count: 100))
+        #expect(String(data: remainingData, encoding: .utf8) == ", World!")
         #expect(buffer.isEmpty)
     }
 
@@ -240,9 +214,8 @@ struct CSVByteBufferTests {
 
         buffer.write(testData)
 
-        let peeked = buffer.peek(count: 3)
-        #expect(peeked != nil)
-        #expect(String(data: peeked!, encoding: .utf8) == "Hel")
+        let peeked = try #require(buffer.peek(count: 3))
+        #expect(String(data: peeked, encoding: .utf8) == "Hel")
         #expect(buffer.readableBytes == 5) // Not consumed
 
         let read = buffer.read(count: 3)
@@ -294,18 +267,16 @@ struct CSVByteBufferTests {
         buffer.write(testData)
 
         // Find first comma and read up to it
-        let comma1 = buffer.findByte(UInt8(ascii: ","))
-        #expect(comma1 != nil)
-        let field1 = buffer.read(count: comma1!)
+        let comma1 = try #require(buffer.findByte(UInt8(ascii: ",")))
+        let field1 = buffer.read(count: comma1)
         #expect(String(data: field1!, encoding: .utf8) == "field1")
 
         // Skip comma
         buffer.skip(count: 1)
 
         // Find next comma
-        let comma2 = buffer.findByte(UInt8(ascii: ","))
-        #expect(comma2 != nil)
-        let field2 = buffer.read(count: comma2!)
+        let comma2 = try #require(buffer.findByte(UInt8(ascii: ",")))
+        let field2 = buffer.read(count: comma2)
         #expect(String(data: field2!, encoding: .utf8) == "field2")
 
         // Skip comma and read rest

@@ -3,7 +3,7 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-public struct CSVRowBuilderMacro: MemberMacro, ExtensionMacro, MemberAttributeMacro {
+public struct CSVRowDecoderBuilderMacro: MemberMacro, ExtensionMacro, MemberAttributeMacro {
 
     public static func expansion(
         of _: AttributeSyntax,
@@ -13,22 +13,16 @@ public struct CSVRowBuilderMacro: MemberMacro, ExtensionMacro, MemberAttributeMa
     ) throws -> [DeclSyntax] {
         // Get the struct declaration
         guard let structDecl = declaration.as(StructDeclSyntax.self) else {
-            throw MacroError("@CSVRowBuilder can only be applied to structs")
+            throw MacroError("@CSVRowDecoderBuilder can only be applied to structs")
         }
 
         // Extract fields using shared helper
         let fields = try FieldExtractor.extractFields(from: structDecl)
 
         // Generate init?(from fields: [String]) using shared helper
-        let initMethod = InitializerGenerator.generateInitializer(for: fields, protocolType: "CSVCodable")
+        let initMethod = InitializerGenerator.generateInitializer(for: fields, protocolType: "CSVDecodable")
 
-        // Generate func toCSVRow() -> [String] using shared helper
-        let toCSVRowMethod = ToCSVRowGenerator.generateToCSVRow(for: fields)
-
-        return [
-            DeclSyntax(initMethod),
-            DeclSyntax(toCSVRowMethod)
-        ]
+        return [DeclSyntax(initMethod)]
     }
 
     public static func expansion(
@@ -38,7 +32,7 @@ public struct CSVRowBuilderMacro: MemberMacro, ExtensionMacro, MemberAttributeMa
         conformingTo _: [TypeSyntax],
         in _: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
-        let conformanceExtension = try ExtensionDeclSyntax("extension \(type): CSVRow {}")
+        let conformanceExtension = try ExtensionDeclSyntax("extension \(type): CSVDecodableRow {}")
         return [conformanceExtension]
     }
 
