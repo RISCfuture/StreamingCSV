@@ -55,7 +55,10 @@ public struct CSVFieldRange: Sendable {
             return ""
         }
 
-        let fieldData = data[start..<end]
+        // Adjust for Data slices that may have non-zero startIndex
+        let adjustedStart = data.startIndex + start
+        let adjustedEnd = data.startIndex + end
+        let fieldData = data[adjustedStart..<adjustedEnd]
         guard let rawString = String(data: fieldData, encoding: encoding) else {
             return nil
         }
@@ -63,7 +66,7 @@ public struct CSVFieldRange: Sendable {
         // For quoted fields, we need to handle escaped quotes
         if isQuoted {
             // The field data already excludes the outer quotes (handled in parser)
-            // but we need to unescape any double quotes
+            // Standard CSV: "" becomes "
             return rawString.replacingOccurrences(of: "\"\"", with: "\"")
         }
 
@@ -208,15 +211,19 @@ public struct ByteCSVParser: Sendable {
     /// The byte value used for escaping special characters
     public let escape: UInt8
 
+    /// The string encoding to use when converting bytes to strings
+    public let encoding: String.Encoding
+
     // Pre-computed sets for fast lookup
     private let specialBytes: Set<UInt8>
     private let lineEndingBytes: Set<UInt8> = [Self.lf, Self.cr]
 
-    public init(delimiter: Character = ",", quote: Character = "\"", escape: Character = "\"") {
+    public init(delimiter: Character = ",", quote: Character = "\"", escape: Character = "\"", encoding: String.Encoding = .utf8) {
         // Convert characters to UTF-8 bytes
         self.delimiter = delimiter.utf8.first!
         self.quote = quote.utf8.first!
         self.escape = escape.utf8.first!
+        self.encoding = encoding
 
         // Pre-compute special bytes for fast checking
         self.specialBytes = [self.delimiter, self.quote, Self.lf, Self.cr]
@@ -225,8 +232,12 @@ public struct ByteCSVParser: Sendable {
     /**
      Parse a complete row from data, returning field ranges
      Returns nil if no complete row is found
+     
+     - Parameters:
+       - data: The data to parse
+       - isEndOfFile: If true, treats end of data as end of row (for last row without newline)
      */
-    public func parseRow(from data: Data) -> (row: CSVRowBytes, consumedBytes: Int)? {
+    public func parseRow(from data: Data, isEndOfFile: Bool = true) -> (row: CSVRowBytes, consumedBytes: Int)? {
         var fields: [CSVFieldRange] = []
         fields.reserveCapacity(16) // Pre-allocate for typical row size
 
@@ -271,7 +282,7 @@ public struct ByteCSVParser: Sendable {
                             pos += 1 // Skip LF in CRLF
                         }
 
-                        return (CSVRowBytes(data: data, fields: fields), pos)
+                        return (CSVRowBytes(data: data, fields: fields, encoding: encoding), pos)
                     }
                     if byte == quote {
                         // Double quote - continue in quoted mode
@@ -336,7 +347,7 @@ public struct ByteCSVParser: Sendable {
                         pos += 1 // Skip LF in CRLF
                     }
 
-                    return (CSVRowBytes(data: data, fields: fields), pos)
+                    return (CSVRowBytes(data: data, fields: fields, encoding: encoding), pos)
                 }
                 // Regular character
                 pos += 1
@@ -344,17 +355,22 @@ public struct ByteCSVParser: Sendable {
             }
 
             // Handle end of data
-            if fieldStart < dataCount || !fields.isEmpty {
+            // Only return a row if:
+            // 1. We're at the actual end of file (isEndOfFile == true), OR
+            // 2. We have an empty data (no fields started)
+            // Otherwise, this is an incomplete row and we need more data
+            if isEndOfFile && !inQuotes && (fieldStart < dataCount || !fields.isEmpty) {
                 // Add final field
                 let end = afterQuote ? pos - 1 : pos
                 fields.append(CSVFieldRange(
                     start: fieldStart,
                     end: end,
-                    isQuoted: inQuotes || afterQuote
+                    isQuoted: afterQuote
                 ))
-                return (CSVRowBytes(data: data, fields: fields), pos)
+                return (CSVRowBytes(data: data, fields: fields, encoding: encoding), pos)
             }
 
+            // Incomplete row or end of buffer - return nil so caller knows to get more data
             return nil
         }
     }
@@ -399,7 +415,7 @@ public struct ByteCSVParser: Sendable {
                         pos += 1
                     }
 
-                    return (CSVRowBytes(data: data, fields: fields), pos)
+                    return (CSVRowBytes(data: data, fields: fields, encoding: encoding), pos)
                 } else {
                     pos += 1
                 }
@@ -412,7 +428,7 @@ public struct ByteCSVParser: Sendable {
                     end: pos,
                     isQuoted: false
                 ))
-                return (CSVRowBytes(data: data, fields: fields), pos)
+                return (CSVRowBytes(data: data, fields: fields, encoding: encoding), pos)
             }
 
             return nil

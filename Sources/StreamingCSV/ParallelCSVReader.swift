@@ -151,11 +151,22 @@ public actor ParallelCSVReader {
         var offset = 0
 
         while offset < data.count {
-            let remainingData = data[offset...]
-            if let (row, consumed) = parser.parseRow(from: Data(remainingData)) {
-                rows.append(row.stringFields)
-                offset += consumed
+            let remainingCount = data.count - offset
+            guard remainingCount > 0 else { break }
+
+            // Create a slice without copying
+            let startIndex = data.startIndex.advanced(by: offset)
+            let endIndex = data.endIndex
+            let remainingData = data[startIndex..<endIndex]
+
+            // Check if this is the last chunk of data
+            let isEndOfChunk = offset + remainingCount >= data.count
+
+            if let result = parser.parseRow(from: remainingData, isEndOfFile: isEndOfChunk) {
+                rows.append(result.row.stringFields)
+                offset += result.consumedBytes
             } else {
+                // No complete row found in remaining data
                 break
             }
         }
@@ -187,10 +198,17 @@ public actor ParallelCSVReader {
         let data = await dataSource.createSlice(from: 0, to: await dataSource.fileSize)
 
         while offset < data.count {
-            let remainingData = data[offset...]
-            if let (row, consumed) = parser.parseRow(from: Data(remainingData)) {
-                rows.append(row.stringFields)
-                offset += consumed
+            let remainingCount = data.count - offset
+            guard remainingCount > 0 else { break }
+
+            let startIndex = data.startIndex.advanced(by: offset)
+            let endIndex = data.endIndex
+            let remainingData = data[startIndex..<endIndex]
+            let isEndOfFile = offset + remainingCount >= data.count
+
+            if let result = parser.parseRow(from: Data(remainingData), isEndOfFile: isEndOfFile) {
+                rows.append(result.row.stringFields)
+                offset += result.consumedBytes
             } else {
                 break
             }
@@ -209,10 +227,17 @@ public actor ParallelCSVReader {
         let data = await dataSource.createSlice(from: 0, to: await dataSource.fileSize)
 
         while offset < data.count {
-            let remainingData = data[offset...]
-            if let (row, consumed) = parser.parseRow(from: Data(remainingData)) {
-                await handler(row.stringFields)
-                offset += consumed
+            let remainingCount = data.count - offset
+            guard remainingCount > 0 else { break }
+
+            let startIndex = data.startIndex.advanced(by: offset)
+            let endIndex = data.endIndex
+            let remainingData = data[startIndex..<endIndex]
+            let isEndOfFile = offset + remainingCount >= data.count
+
+            if let result = parser.parseRow(from: Data(remainingData), isEndOfFile: isEndOfFile) {
+                await handler(result.row.stringFields)
+                offset += result.consumedBytes
             } else {
                 break
             }

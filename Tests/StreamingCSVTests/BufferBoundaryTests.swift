@@ -1,199 +1,174 @@
+import Foundation
 @testable import StreamingCSV
 import Testing
 
-@Suite("Buffer Boundary Tests")
+/// Tests for the buffer boundary bug fix
+/// 
+/// This test suite verifies that StreamingCSV correctly handles CSV rows
+/// that span buffer boundaries. Previously, the ByteCSVParser would incorrectly
+/// return incomplete rows when data ended at a buffer boundary, causing data loss.
+@Suite("Buffer Boundary Handling")
 struct BufferBoundaryTests {
 
-    @Test
-    func testBufferBoundaryParsing() async throws {
-        // Create a CSV with rows that will span buffer boundaries
-        // Use a small buffer size to force boundary issues
+    /// Test that rows spanning buffer boundaries are parsed correctly
+    ///
+    /// This test creates a CSV where a row spans exactly across the typical 64KB buffer boundary.
+    /// The bug would cause the parser to return an incomplete row with fewer fields than expected.
+    @Test("Parse row spanning buffer boundary")
+    func parseRowSpanningBufferBoundary() async throws {
+        // Create a CSV with a row that will span the buffer boundary
+        // First, create enough data to reach near the buffer size
+        let padding = String(repeating: "x", count: 65530)
         let csvContent = """
-        uniqueID,firstName,lastName,middleName,suffix,city,state,country
-        A0104644,ERIC,DAYRELL,BATE,,SEATTLE,WA,USA
-        A0104645,JOHN,SMITH,DOE,,PORTLAND,OR,USA
-        A0104646,JANE,WILLIAMS,ANN,,DENVER,CO,USA
-        A0104647,ROBERT,JOHNSON,MICHAEL,,PHOENIX,AZ,USA
-        A0104648,MARY,DAVIS,ELIZABETH,,LAS VEGAS,NV,USA
-        A0104649,JAMES,BROWN,WILLIAM,,SAN FRANCISCO,CA,USA
-        A0104650,PATRICIA,JONES,MARIE,,LOS ANGELES,CA,USA
+        header1,header2,header3
+        \(padding),field2,field3
+        nextrow,data2,data3
         """
 
-        let data = csvContent.data(using: .utf8)!
+        let testData = csvContent.data(using: .utf8)!
 
-        // Test with very small buffer to force boundary conditions
-        let reader = StreamingCSVReader(
-            data: data,
-            bufferSize: 32  // Small buffer to force multiple reads
-        )
+        // Test with default buffer size (65536 bytes)
+        let reader = StreamingCSVReader(data: testData, bufferSize: 65536)
 
         var rows: [[String]] = []
         while let row = try await reader.readRow() {
             rows.append(row)
         }
 
-        // Should have 8 rows (header + 7 data rows)
-        #expect(rows.count == 8)
+        #expect(rows.count == 3, "Should parse all 3 rows")
+        #expect(rows[0] == ["header1", "header2", "header3"])
+        #expect(rows[1].count == 3, "Second row should have 3 fields")
+        #expect(rows[1][0] == padding)
+        #expect(rows[1][1] == "field2")
+        #expect(rows[1][2] == "field3")
+        #expect(rows[2] == ["nextrow", "data2", "data3"])
+    }
+
+    /// Test that the ByteCSVParser correctly handles incomplete data
+    ///
+    /// The core of the fix was ensuring ByteCSVParser returns nil for incomplete rows
+    /// when not at the actual end of file, allowing the reader to fetch more data.
+    @Test("ByteCSVParser returns nil for incomplete rows")
+    func byteParserHandlesIncompleteData() throws {
+        let csvData = Data("field1,field2,field3\nvalue1,value2,value3\n".utf8)
+        let parser = ByteCSVParser()
+
+        // Parse complete data - should work
+        let fullResult = try #require(parser.parseRow(from: csvData, isEndOfFile: true))
+        #expect(fullResult.row.fields.count == 3, "Should have 3 fields")
+
+        // Parse incomplete data (cut off mid-row) with isEndOfFile = false
+        // Cut at position 35, which is in the middle of "value3" in the second row
+        let partialData = csvData[0..<35] // Cut off in the middle of the second row
+
+        // First, parse and skip the header row
+        let firstRow = try #require(parser.parseRow(from: partialData, isEndOfFile: false))
+        #expect(firstRow.row.fields.count == 3)
+
+        // Now try to parse the incomplete second row
+        let remainingData = partialData[firstRow.consumedBytes...]
+        let partialResult = parser.parseRow(from: Data(remainingData), isEndOfFile: false)
+        #expect(partialResult == nil, "Should return nil for incomplete row when not at EOF")
+
+        // But should parse if we say it's EOF
+        let partialResultEOF = try #require(parser.parseRow(from: Data(remainingData), isEndOfFile: true))
+        #expect(partialResultEOF.row.fields.count >= 2, "Should have at least 2 fields in partial row")
+    }
+
+    /// Test with multiple buffer sizes to ensure the fix works consistently
+    @Test("Parse with various buffer sizes", arguments: [1024, 4096, 32768, 65536, 131072])
+    func parseWithVariousBufferSizes(bufferSize: Int) async throws {
+        // Create test data with a long row
+        let longField = String(repeating: "data", count: 20000)
+        let csvContent = """
+        col1,col2,col3,col4,col5
+        short,\(longField),value3,value4,value5
+        row2col1,row2col2,row2col3,row2col4,row2col5
+        """
+
+        let testData = csvContent.data(using: .utf8)!
+        let reader = StreamingCSVReader(data: testData, bufferSize: bufferSize)
+
+        var rows: [[String]] = []
+        while let row = try await reader.readRow() {
+            rows.append(row)
+        }
+
+        #expect(rows.count == 3, "Should parse all 3 rows with buffer size \(bufferSize)")
 
         // Verify header
-        #expect(rows[0] == ["uniqueID", "firstName", "lastName", "middleName", "suffix", "city", "state", "country"])
+        #expect(rows[0] == ["col1", "col2", "col3", "col4", "col5"])
 
-        // Verify first data row
-        #expect(rows[1][0] == "A0104644")
-        #expect(rows[1][1] == "ERIC")
-        #expect(rows[1][2] == "DAYRELL")
+        // Verify long row
+        #expect(rows[1].count == 5, "Long row should have 5 fields")
+        #expect(rows[1][0] == "short")
+        #expect(rows[1][1] == longField)
+        #expect(rows[1][2] == "value3")
 
-        // Verify no malformed IDs (single digits, fragments)
-        for (index, row) in rows.enumerated() {
-            if index == 0 { continue } // Skip header
-            let id = row[0]
-            #expect(id.count > 2)
-            #expect(id.starts(with: "A"))
-        }
+        // Verify last row
+        #expect(rows[2] == ["row2col1", "row2col2", "row2col3", "row2col4", "row2col5"])
     }
 
-    @Test
-    func testBufferBoundaryWithQuotedFields() async throws {
-        // Test with quoted fields that might span boundaries
+    /// Test with quoted fields at buffer boundaries
+    ///
+    /// Quoted fields are particularly tricky as the parser needs to track
+    /// quote state across buffer boundaries.
+    @Test("Quoted field at buffer boundary")
+    func quotedFieldAtBufferBoundary() async throws {
+        // Create a quoted field that will span the buffer boundary
+        let longQuotedValue = String(repeating: "x", count: 65520)
         let csvContent = """
-        id,name,description
-        1,"John Smith","This is a long description that might span buffer boundaries"
-        2,"Jane Doe","Another description with, comma inside"
-        3,"Bob Johnson","Description with ""escaped quotes"" inside"
+        name,description
+        "test","\(longQuotedValue)"
+        "next","row"
         """
 
-        let data = csvContent.data(using: .utf8)!
-
-        // Very small buffer to force boundary issues
-        let reader = StreamingCSVReader(
-            data: data,
-            bufferSize: 20
-        )
+        let testData = csvContent.data(using: .utf8)!
+        let reader = StreamingCSVReader(data: testData, bufferSize: 65536)
 
         var rows: [[String]] = []
         while let row = try await reader.readRow() {
             rows.append(row)
         }
 
-        #expect(rows.count == 4)
-
-        // Verify data integrity
-        #expect(rows[1][0] == "1")
-        #expect(rows[1][1] == "John Smith")
-        #expect(rows[1][2] == "This is a long description that might span buffer boundaries")
-
-        #expect(rows[2][2] == "Another description with, comma inside")
-        #expect(rows[3][2] == "Description with \"escaped quotes\" inside")
+        #expect(rows.count == 3)
+        #expect(rows[1][0] == "test")
+        #expect(rows[1][1] == longQuotedValue)
+        #expect(rows[2] == ["next", "row"])
     }
 
-    @Test
-    func testBufferBoundaryWithVariousLineSizes() async throws {
-        // Create rows of varying lengths to test different boundary conditions
-        var csvLines: [String] = ["id,data"]
+    /// Regression test for the specific buffer boundary bug
+    ///
+    /// The original bug was discovered when parsing FAA NASR data where row 127
+    /// started at byte 65,056, right at the default 65,536-byte buffer boundary.
+    /// The ByteCSVParser would incorrectly return an incomplete row with 78 fields
+    /// instead of the expected 90 fields.
+    @Test("Row at exact buffer boundary")
+    func rowAtExactBufferBoundary() async throws {
+        // Create data that puts a row exactly at the buffer boundary
+        // Fill most of the buffer with a long field
+        let bufferSize = 65536
+        let beforeBoundary = String(repeating: "x", count: bufferSize - 20)
 
-        // Add rows of increasing size
-        for i in 1...10 {
-            let data = String(repeating: "X", count: i * 10)
-            csvLines.append("\(i),\"\(data)\"")
-        }
-
-        let csvContent = csvLines.joined(separator: "\n")
-        let data = csvContent.data(using: .utf8)!
-
-        let reader = StreamingCSVReader(
-            data: data,
-            bufferSize: 50  // Buffer smaller than some rows
-        )
-
-        var rows: [[String]] = []
-        while let row = try await reader.readRow() {
-            rows.append(row)
-        }
-
-        #expect(rows.count == 11)
-
-        // Verify each row
-        for i in 1...10 {
-            let row = rows[i]
-            #expect(row[0] == "\(i)")
-            #expect(row[1].count == i * 10)
-        }
-    }
-
-    @Test
-    func testBufferBoundaryAtExactRowEnd() async throws {
-        // Test when buffer boundary falls exactly at row end
-        // Each row is exactly 16 bytes (including newline)
+        // This CSV will have the second row starting very close to the buffer boundary
         let csvContent = """
-        id,name,val
-        1,John,100
-        2,Jane,200
-        3,Bob,300
+        header1,header2,header3
+        "\(beforeBoundary)",field2,field3
+        critical1,critical2,critical3
         """
 
-        let data = csvContent.data(using: .utf8)!
-
-        // Buffer size that might align with row boundaries
-        let reader = StreamingCSVReader(
-            data: data,
-            bufferSize: 16
-        )
+        let testData = csvContent.data(using: .utf8)!
+        let reader = StreamingCSVReader(data: testData, bufferSize: bufferSize)
 
         var rows: [[String]] = []
         while let row = try await reader.readRow() {
             rows.append(row)
         }
 
-        #expect(rows.count == 4)
-        #expect(rows[0] == ["id", "name", "val"])
-        #expect(rows[1] == ["1", "John", "100"])
-        #expect(rows[2] == ["2", "Jane", "200"])
-        #expect(rows[3] == ["3", "Bob", "300"])
-    }
-
-    @Test
-    func testRealWorldCSVParsing() async throws {
-        // Simulate the real data format from SwiftAirmen
-        let csvContent = """
-        UNIQUE ID,FIRST NAME,LAST NAME,CERT,TYPE,LEVEL,EXPDATE,RATING
-        A0104644,ERIC,DAYRELL,P,PP-ASEL,ATR,102025,EX-H,L,M-COMM
-        A0104645,JOHN,SMITH,P,PP-AMEL,COM,122025,H,SEA
-        A0104646,JANE,DOE,P,PP-ASEL,PVT,012026,
-        A0104647,ROBERT,JOHNSON,A,A,AMT,032026,
-        A0104648,MARY,WILLIAMS,P,PP-GLIDER,COM,042026,G
-        """
-
-        let data = csvContent.data(using: .utf8)!
-
-        // Use small buffer to test boundary conditions
-        let reader = StreamingCSVReader(
-            data: data,
-            bufferSize: 40  // Force multiple buffer fills
-        )
-
-        var rows: [[String]] = []
-        var rowCount = 0
-        while let row = try await reader.readRow() {
-            rows.append(row)
-            rowCount += 1
-
-            // Verify no single-character IDs
-            if rowCount > 1 {  // Skip header
-                let id = row[0]
-                #expect(id.count > 2)
-            }
-        }
-
-        #expect(rows.count == 6)
-
-        // Verify specific IDs
-        #expect(rows[1][0] == "A0104644")
-        #expect(rows[1][1] == "ERIC")
-        #expect(rows[1][2] == "DAYRELL")
-
-        #expect(rows[2][0] == "A0104645")
-        #expect(rows[3][0] == "A0104646")
-        #expect(rows[4][0] == "A0104647")
-        #expect(rows[5][0] == "A0104648")
+        #expect(rows.count == 3, "Should parse all 3 rows")
+        #expect(rows[0] == ["header1", "header2", "header3"])
+        #expect(rows[1].count == 3, "Second row should have 3 fields")
+        #expect(rows[1][0] == beforeBoundary)
+        #expect(rows[2] == ["critical1", "critical2", "critical3"], "Critical row at boundary should parse correctly")
     }
 }

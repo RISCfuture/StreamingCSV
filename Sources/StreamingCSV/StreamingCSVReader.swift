@@ -76,11 +76,11 @@ public actor StreamingCSVReader {
                 quote: Character = "\"",
                 escape: Character = "\"",
                 encoding: String.Encoding = .utf8,
-                bufferSize: Int = 65536,
+                bufferSize: Int = 65536
     ) throws {
         self.dataSource = try FileDataSource(url: url, bufferSize: bufferSize)
         self.parser = CSVParser(delimiter: delimiter, quote: quote, escape: escape)
-        self.byteParser = ByteCSVParser(delimiter: delimiter, quote: quote, escape: escape)
+        self.byteParser = ByteCSVParser(delimiter: delimiter, quote: quote, escape: escape, encoding: encoding)
         self.bufferStrategy = AdaptiveBufferStrategy()
         self.byteBuffer = CSVByteBuffer(capacity: bufferSize)
         self.encoding = encoding
@@ -121,7 +121,7 @@ public actor StreamingCSVReader {
             progressHandler: progressHandler
         )
         self.parser = CSVParser(delimiter: delimiter, quote: quote, escape: escape)
-        self.byteParser = ByteCSVParser(delimiter: delimiter, quote: quote, escape: escape)
+        self.byteParser = ByteCSVParser(delimiter: delimiter, quote: quote, escape: escape, encoding: encoding)
         self.bufferStrategy = AdaptiveBufferStrategy()
         self.byteBuffer = CSVByteBuffer(capacity: bufferSize)
         self.encoding = encoding
@@ -151,7 +151,7 @@ public actor StreamingCSVReader {
                 bufferSize: Int = 65536) {
         self.dataSource = DataDataSource(data: data, bufferSize: bufferSize)
         self.parser = CSVParser(delimiter: delimiter, quote: quote, escape: escape)
-        self.byteParser = ByteCSVParser(delimiter: delimiter, quote: quote, escape: escape)
+        self.byteParser = ByteCSVParser(delimiter: delimiter, quote: quote, escape: escape, encoding: encoding)
         self.bufferStrategy = AdaptiveBufferStrategy()
         self.byteBuffer = CSVByteBuffer(capacity: bufferSize)
         self.encoding = encoding
@@ -183,7 +183,7 @@ public actor StreamingCSVReader {
                                              bufferSize: Int = 65536) async throws where S.Element == UInt8, S.AsyncIterator: Sendable {
         self.dataSource = try await AsyncBytesDataSource(bytes: bytes, bufferSize: bufferSize)
         self.parser = CSVParser(delimiter: delimiter, quote: quote, escape: escape)
-        self.byteParser = ByteCSVParser(delimiter: delimiter, quote: quote, escape: escape)
+        self.byteParser = ByteCSVParser(delimiter: delimiter, quote: quote, escape: escape, encoding: encoding)
         self.bufferStrategy = AdaptiveBufferStrategy()
         self.byteBuffer = CSVByteBuffer(capacity: bufferSize)
         self.encoding = encoding
@@ -245,7 +245,8 @@ public actor StreamingCSVReader {
             if byteBuffer.readableBytes > 0 {
                 if let data = byteBuffer.peek(count: byteBuffer.readableBytes) {
                     var parseResult: (row: CSVRowBytes, consumed: Int)?
-                    if let result = byteParser.parseRow(from: data) {
+                    // Only treat as end of file if we're actually at the end
+                    if let result = byteParser.parseRow(from: data, isEndOfFile: isAtEnd) {
                         parseResult = (result.row, result.consumedBytes)
                     }
 
@@ -259,20 +260,28 @@ public actor StreamingCSVReader {
 
                         return row
                     }
-                }
-            }
 
-            // Need more data - compact buffer to make room for more data
-            // This ensures partial rows at the end of the buffer are preserved
-            if byteBuffer.readableBytes > 0 && byteBuffer.readableBytes < byteBuffer.capacity / 2 {
-                byteBuffer.compact()
+                    // No complete row found - we may have a partial row
+                    // If we're not at end and have data, we need more to complete the row
+                    if !isAtEnd {
+                        // Compact buffer to move any partial row to the beginning
+                        byteBuffer.compact()
+
+                        // Try to fill more data
+                        try await fillByteBuffer()
+
+                        // Continue the loop to try parsing again with more data
+                        continue
+                    }
+                }
             }
 
             if isAtEnd {
                 // Process any remaining data
                 if byteBuffer.readableBytes > 0 {
                     if let data = byteBuffer.read(count: byteBuffer.readableBytes) {
-                        if let (row, _) = byteParser.parseRow(from: data) {
+                        // At end of file, so allow final row without newline
+                        if let (row, _) = byteParser.parseRow(from: data, isEndOfFile: true) {
                             return row
                         }
                     }
@@ -280,7 +289,7 @@ public actor StreamingCSVReader {
                 return nil
             }
 
-            // Fill buffer with more data
+            // No data left and not at end - try to get more
             try await fillByteBuffer()
         }
     }
@@ -333,22 +342,8 @@ public actor StreamingCSVReader {
         guard let rowBytes = try await readRowBytes() else {
             return nil
         }
-        // Convert field ranges to strings
-        return rowBytes.fields.map { field in
-            guard field.start < field.end else { return "" }
-            let fieldData = rowBytes.data[field.start..<field.end]
-            var fieldString = String(data: fieldData, encoding: encoding) ?? ""
-
-            // If the field was quoted, unescape any escaped quotes
-            if field.isQuoted {
-                fieldString = fieldString.replacingOccurrences(
-                    of: "\(parser.escape)\(parser.quote)",
-                    with: "\(parser.quote)"
-                )
-            }
-
-            return fieldString
-        }
+        // Use the stringFields property which properly handles the escapedQuoteMode
+        return rowBytes.stringFields
     }
 
     /**
