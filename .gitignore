@@ -8,3 +8,5 @@
 
 # SwiftLint
 .swiftlint/RemoteConfigCache
+
+.swift-format

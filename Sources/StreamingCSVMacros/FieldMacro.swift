@@ -3,13 +3,13 @@ import SwiftSyntax
 import SwiftSyntaxMacros
 
 public struct FieldMacro: PeerMacro {
-    public static func expansion(
-        of _: AttributeSyntax,
-        providingPeersOf _: some DeclSyntaxProtocol,
-        in _: some MacroExpansionContext
-    ) throws -> [DeclSyntax] {
-        // Field macro is just a marker, doesn't generate any code itself
-        // The CSVRowBuilder macro will look for properties marked with @Field
-        return []
-    }
+  public static func expansion(
+    of _: AttributeSyntax,
+    providingPeersOf _: some DeclSyntaxProtocol,
+    in _: some MacroExpansionContext
+  ) throws -> [DeclSyntax] {
+    // Field macro is just a marker, doesn't generate any code itself
+    // The CSVRowBuilder macro will look for properties marked with @Field
+    return []
+  }
 }
