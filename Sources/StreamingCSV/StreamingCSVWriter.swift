@@ -18,11 +18,11 @@ import Foundation
 
  ### Writing Raw Data
 
- - ``writeRow(_:)-79v2d``
+ - ``writeRow(_:)-([String])``
 
  ### Writing Typed Data
 
- - ``writeRow(_:)``
+ - ``writeRow(_:)-(T)``
 
  ### Buffer Management
 

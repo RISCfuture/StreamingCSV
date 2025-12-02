@@ -4,7 +4,7 @@ import Foundation
 ///
 /// `CSVRow` combines ``CSVDecodableRow`` and ``CSVEncodableRow`` protocols for types
 /// that need bidirectional CSV conversion. Types conforming to `CSVRow` can be used
-/// with both ``StreamingCSVReader/readRow()`` and ``StreamingCSVWriter/writeRow(_:)``.
+/// with both ``StreamingCSVReader/readRow()`` and ``StreamingCSVWriter/writeRow(_:)-(T)``.
 ///
 /// ## Conforming to CSVRow
 ///
