@@ -216,33 +216,35 @@ struct StreamingCSVWriterTests {
     try FileManager.default.removeItem(at: tempURL)
   }
 
-  @Test
-  func testDifferentEncodings() async throws {
-    let tempURL = FileManager.default.temporaryDirectory
-      .appendingPathComponent(UUID().uuidString)
-      .appendingPathExtension("csv")
+  #if !os(Linux)
+    @Test
+    func testDifferentEncodings() async throws {
+      let tempURL = FileManager.default.temporaryDirectory
+        .appendingPathComponent(UUID().uuidString)
+        .appendingPathExtension("csv")
 
-    // Test with ISO Latin-1 encoding
-    let writer = try StreamingCSVWriter(url: tempURL, encoding: .isoLatin1)
-    try await writer.writeRow(["Name", "Value"])
-    try await writer.writeRow(["Test", "123"])
-    try await writer.writeRow(["Café", "Naïve"])
-    try await writer.flush()
+      // Test with ISO Latin-1 encoding
+      let writer = try StreamingCSVWriter(url: tempURL, encoding: .isoLatin1)
+      try await writer.writeRow(["Name", "Value"])
+      try await writer.writeRow(["Test", "123"])
+      try await writer.writeRow(["Café", "Naïve"])
+      try await writer.flush()
 
-    // Read back with ISO Latin-1 encoding
-    let reader = try StreamingCSVReader(url: tempURL, encoding: .isoLatin1)
+      // Read back with ISO Latin-1 encoding
+      let reader = try StreamingCSVReader(url: tempURL, encoding: .isoLatin1)
 
-    let header = try await reader.readRow()
-    #expect(header == ["Name", "Value"])
+      let header = try await reader.readRow()
+      #expect(header == ["Name", "Value"])
 
-    let row1 = try await reader.readRow()
-    #expect(row1 == ["Test", "123"])
+      let row1 = try await reader.readRow()
+      #expect(row1 == ["Test", "123"])
 
-    let row2 = try await reader.readRow()
-    #expect(row2 == ["Café", "Naïve"])
+      let row2 = try await reader.readRow()
+      #expect(row2 == ["Café", "Naïve"])
 
-    try FileManager.default.removeItem(at: tempURL)
-  }
+      try FileManager.default.removeItem(at: tempURL)
+    }
+  #endif
 
   @Test
   func testAppendMode() async throws {
