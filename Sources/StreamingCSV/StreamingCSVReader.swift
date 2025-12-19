@@ -55,6 +55,26 @@ public actor StreamingCSVReader {
   private var isAtEnd: Bool
   private var characteristics: CSVCharacteristics
 
+  /// The total number of bytes in the data source, if known.
+  ///
+  /// For file-based readers, this returns the file size. For streaming sources
+  /// where the total size is unknown, this returns `nil`.
+  public var totalBytes: Int64? {
+    get async { await dataSource.totalBytes }
+  }
+
+  /// The number of bytes that have been read from the data source.
+  ///
+  /// Use this with ``totalBytes`` to calculate progress:
+  /// ```swift
+  /// if let total = await reader.totalBytes {
+  ///     let progress = Double(await reader.bytesRead) / Double(total)
+  /// }
+  /// ```
+  public var bytesRead: Int64 {
+    get async { await dataSource.bytesRead }
+  }
+
   /// Creates a new streaming CSV reader for the specified file.
   ///
   /// - Parameters:

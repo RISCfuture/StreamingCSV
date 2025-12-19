@@ -24,6 +24,23 @@ import Foundation
 public protocol CSVDataSource: Sendable {
 
   /**
+   The total number of bytes in the data source, if known.
+  
+   This property returns the total size of the data source when it can be
+   determined upfront (e.g., for files). For streaming sources where the
+   total size is unknown, this returns `nil`.
+   */
+  var totalBytes: Int64? { get async }
+
+  /**
+   The number of bytes that have been read from the data source.
+  
+   This property tracks how many bytes have been consumed, useful for
+   progress reporting.
+   */
+  var bytesRead: Int64 { get async }
+
+  /**
    Reads data from the source.
   
    This method reads up to `maxLength` bytes from the data source. It returns
@@ -46,4 +63,12 @@ public protocol CSVDataSource: Sendable {
    - Throws: An error if closing the source fails.
    */
   func close() async throws
+}
+
+extension CSVDataSource {
+  /// Default implementation returns nil (unknown total size).
+  public var totalBytes: Int64? { nil }
+
+  /// Default implementation returns 0.
+  public var bytesRead: Int64 { 0 }
 }

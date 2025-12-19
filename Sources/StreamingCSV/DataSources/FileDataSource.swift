@@ -19,6 +19,12 @@ public actor FileDataSource: CSVDataSource {
   private let bufferSize: Int
   private var isAtEnd: Bool = false
 
+  /// The total size of the file in bytes.
+  public let totalBytes: Int64?
+
+  /// The number of bytes read so far.
+  public private(set) var bytesRead: Int64 = 0
+
   /// Creates a new file data source.
   ///
   /// - Parameters:
@@ -32,6 +38,15 @@ public actor FileDataSource: CSVDataSource {
     }
     self.fileHandle = try FileHandle(forReadingFrom: url)
     self.bufferSize = bufferSize
+
+    // Get file size for progress tracking
+    if let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+      let fileSize = attributes[.size] as? Int64
+    {
+      self.totalBytes = fileSize
+    } else {
+      self.totalBytes = nil
+    }
   }
 
   public func read(maxLength: Int) throws -> Data? {
@@ -45,6 +60,7 @@ public actor FileDataSource: CSVDataSource {
       return nil
     }
 
+    bytesRead += Int64(data.count)
     return data
   }
 
