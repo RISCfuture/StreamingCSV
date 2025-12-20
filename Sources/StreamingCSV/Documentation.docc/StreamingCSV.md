@@ -60,6 +60,8 @@ files of any size.
 
 - ``CSVRowSequence``
 - ``TypedCSVRowSequence``
+- ``CSVRowStream``
+- ``TypedCSVRowStream``
 
 ### CSV Encoding and Decoding
 

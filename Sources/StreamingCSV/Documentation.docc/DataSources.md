@@ -70,8 +70,7 @@ for try await row in await reader.rows() {
 
 ### Async Byte Streams
 
-Work with asynchronous byte sequences for true streaming without loading entire
-files into memory:
+Work with asynchronous byte sequences without loading entire files into memory:
 
 ```swift
 // Using URLSession's bytes stream
@@ -224,8 +223,8 @@ let reader = try StreamingCSVReader(
 When reading from network sources:
 
 - `URLDataSource` downloads the entire file before processing begins
-- `AsyncBytesDataSource` with `URLSession.bytes` provides true streaming but 
-  buffers data for compatibility
+- `AsyncBytesDataSource` with `URLSession.bytes` streams data incrementally
+- For chunk-based streaming from network responses, use ``CSVRowStream``
 - Consider file size and network conditions when choosing an approach
 
 ### Advanced Data Sources

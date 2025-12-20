@@ -192,6 +192,57 @@ let (bytes, _) = try await URLSession.shared.bytes(from: url)
 let reader = try await StreamingCSVReader(bytes: bytes)
 ```
 
+## Streaming from Data Chunks
+
+When reading CSV data from sources that deliver data in chunks (like network
+responses or archive extraction), use `CSVRowStream` to parse rows incrementally
+without buffering the entire input into memory:
+
+```swift
+// From any AsyncSequence of Data chunks
+let dataStream: AsyncThrowingStream<Data, Error> = ...
+let rowStream = CSVRowStream(source: dataStream)
+
+for try await row in rowStream {
+    print(row.stringFields)
+}
+
+// Or use the factory method
+let rowStream = StreamingCSVReader.stream(from: dataStream)
+for try await row in rowStream {
+    process(row.stringFields)
+}
+```
+
+### Typed Streaming
+
+For type-safe streaming, use `TypedCSVRowStream`:
+
+```swift
+@CSVRowBuilder
+struct Person {
+    @Field var name: String
+    @Field var age: Int
+}
+
+let dataStream: AsyncThrowingStream<Data, Error> = ...
+let rowStream = StreamingCSVReader.stream(from: dataStream, as: Person.self)
+
+for try await person in rowStream {
+    print("\(person.name) is \(person.age)")
+}
+```
+
+Note: Like `TypedCSVRowSequence`, iteration ends when a row fails to parse.
+Use `CSVRowStream` directly if you need to skip headers or handle parse failures.
+
+### Benefits of Streaming
+
+- **Memory Efficient**: Only buffers enough data to parse complete rows
+- **Low Latency**: Rows are available as soon as they're parsed
+- **Composable**: Works with Swift's async sequence ecosystem (`map`, `filter`, etc.)
+- **Backpressure**: Automatically handles backpressure through async iteration
+
 ## Writing to Different Destinations
 
 ```swift

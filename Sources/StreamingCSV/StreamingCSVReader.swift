@@ -197,7 +197,7 @@ public actor StreamingCSVReader {
 
   /// Creates a new streaming CSV reader from an AsyncBytes sequence.
   ///
-  /// This initializer enables true streaming of large files without loading them
+  /// This initializer enables streaming of large files without loading them
   /// entirely into memory. It works with URLSession's bytes(from:) method and
   /// FileHandle's bytes property.
   ///
@@ -230,6 +230,94 @@ public actor StreamingCSVReader {
     self.bufferSize = bufferSize
     self.isAtEnd = false
     self.characteristics = CSVCharacteristics()
+  }
+
+  // MARK: - Static Streaming Factory Methods
+
+  /// Creates a streaming CSV row sequence from an async sequence of Data chunks.
+  ///
+  /// This method returns a `CSVRowStream` that parses rows incrementally as data arrives.
+  /// This is ideal for processing large CSV files without loading them entirely into memory.
+  ///
+  /// - Parameters:
+  ///   - source: The async sequence of Data chunks to parse.
+  ///   - delimiter: The character used to separate fields. Defaults to comma (`,`).
+  ///   - quote: The character used to quote fields. Defaults to double quote (`"`).
+  ///   - escape: The character used to escape quotes. Defaults to double quote (`"`).
+  ///   - encoding: The string encoding to use. Defaults to UTF-8.
+  /// - Returns: A `CSVRowStream` that yields rows as they are parsed.
+  ///
+  /// ## Example
+  ///
+  /// ```swift
+  /// let dataStream: AsyncThrowingStream<Data, Error> = ...
+  /// let rowStream = StreamingCSVReader.stream(from: dataStream)
+  ///
+  /// for try await row in rowStream {
+  ///     print(row.stringFields)
+  /// }
+  /// ```
+  public static func stream<S: AsyncSequence & Sendable>(
+    from source: S,
+    delimiter: Character = ",",
+    quote: Character = "\"",
+    escape: Character = "\"",
+    encoding: String.Encoding = .utf8
+  ) -> CSVRowStream<S> where S.Element == Data {
+    CSVRowStream(
+      source: source,
+      delimiter: delimiter,
+      quote: quote,
+      escape: escape,
+      encoding: encoding
+    )
+  }
+
+  /// Creates a streaming typed CSV row sequence from an async sequence of Data chunks.
+  ///
+  /// This method combines streaming parsing with type conversion, yielding strongly-typed
+  /// row objects as data arrives.
+  ///
+  /// - Parameters:
+  ///   - source: The async sequence of Data chunks to parse.
+  ///   - type: The type to convert each row to.
+  ///   - delimiter: The character used to separate fields. Defaults to comma (`,`).
+  ///   - quote: The character used to quote fields. Defaults to double quote (`"`).
+  ///   - escape: The character used to escape quotes. Defaults to double quote (`"`).
+  ///   - encoding: The string encoding to use. Defaults to UTF-8.
+  /// - Returns: A `TypedCSVRowStream` that yields typed rows as they are parsed.
+  ///
+  /// ## Example
+  ///
+  /// ```swift
+  /// @CSVRowBuilder
+  /// struct Person {
+  ///     @Field var name: String
+  ///     @Field var age: Int
+  /// }
+  ///
+  /// let dataStream: AsyncThrowingStream<Data, Error> = ...
+  /// let rowStream = StreamingCSVReader.stream(from: dataStream, as: Person.self)
+  ///
+  /// for try await person in rowStream {
+  ///     print("\(person.name) is \(person.age)")
+  /// }
+  /// ```
+  public static func stream<S: AsyncSequence & Sendable, T: CSVDecodableRow & Sendable>(
+    from source: S,
+    as _: T.Type,
+    delimiter: Character = ",",
+    quote: Character = "\"",
+    escape: Character = "\"",
+    encoding: String.Encoding = .utf8
+  ) -> TypedCSVRowStream<T, S> where S.Element == Data {
+    TypedCSVRowStream(
+      source: source,
+      delimiter: delimiter,
+      quote: quote,
+      escape: escape,
+      encoding: encoding
+    )
   }
 
   // MARK: - Methods
