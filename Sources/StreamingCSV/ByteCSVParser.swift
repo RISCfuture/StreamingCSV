@@ -208,10 +208,6 @@ public struct ByteCSVParser: Sendable {
   /// The string encoding to use when converting bytes to strings
   public let encoding: String.Encoding
 
-  // Pre-computed sets for fast lookup
-  private let specialBytes: Set<UInt8>
-  private let lineEndingBytes: Set<UInt8> = [Self.lf, Self.cr]
-
   public init(
     delimiter: Character = ",",
     quote: Character = "\"",
@@ -223,9 +219,6 @@ public struct ByteCSVParser: Sendable {
     self.quote = quote.utf8.first!
     self.escape = escape.utf8.first!
     self.encoding = encoding
-
-    // Pre-compute special bytes for fast checking
-    self.specialBytes = [self.delimiter, self.quote, Self.lf, Self.cr]
   }
 
   /**
@@ -386,72 +379,6 @@ public struct ByteCSVParser: Sendable {
     }
   }
 
-  func parseSimpleRow(from data: Data) -> (row: CSVRowBytes, consumedBytes: Int)? {
-    var fields: [CSVFieldRange] = []
-    fields.reserveCapacity(16)
-
-    var fieldStart = 0
-    var pos = 0
-    let dataCount = data.count
-
-    return data.withUnsafeBytes { bytes in
-      let ptr = bytes.bindMemory(to: UInt8.self)
-
-      while pos < dataCount {
-        let byte = ptr[pos]
-
-        // Bail out if we see a quote
-        if byte == quote {
-          return nil
-        }
-
-        if byte == delimiter {
-          fields.append(
-            CSVFieldRange(
-              start: fieldStart,
-              end: pos,
-              isQuoted: false
-            )
-          )
-          pos += 1
-          fieldStart = pos
-        } else if byte == Self.lf || byte == Self.cr {
-          // End of row
-          fields.append(
-            CSVFieldRange(
-              start: fieldStart,
-              end: pos,
-              isQuoted: false
-            )
-          )
-
-          pos += 1
-          if byte == Self.cr && pos < dataCount && ptr[pos] == Self.lf {
-            pos += 1
-          }
-
-          return (CSVRowBytes(data: data, fields: fields, encoding: encoding), pos)
-        } else {
-          pos += 1
-        }
-      }
-
-      // End of data
-      if fieldStart < dataCount || !fields.isEmpty {
-        fields.append(
-          CSVFieldRange(
-            start: fieldStart,
-            end: pos,
-            isQuoted: false
-          )
-        )
-        return (CSVRowBytes(data: data, fields: fields, encoding: encoding), pos)
-      }
-
-      return nil
-    }
-  }
-
   func findRowBoundary(in data: Data, startingAt offset: Int = 0) -> Int? {
     guard offset < data.count else { return nil }
 
@@ -488,14 +415,4 @@ public struct ByteCSVParser: Sendable {
     }
   }
 
-  func extractFields(from rowBytes: CSVRowBytes) -> [String] {
-    rowBytes.stringFields
-  }
-
-  func parseRowToStrings(from data: Data) -> (fields: [String], consumedBytes: Int)? {
-    guard let (rowBytes, consumed) = parseRow(from: data) else {
-      return nil
-    }
-    return (rowBytes.stringFields, consumed)
-  }
 }

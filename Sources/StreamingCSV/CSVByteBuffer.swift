@@ -10,10 +10,6 @@ final class CSVByteBuffer: @unchecked Sendable {
     return writeIndex - readIndex
   }
 
-  var writableBytes: Int {
-    return buffer.capacity - writeIndex
-  }
-
   var isEmpty: Bool {
     return readIndex >= writeIndex
   }
@@ -82,57 +78,6 @@ final class CSVByteBuffer: @unchecked Sendable {
       return i - readIndex
     }
     return nil
-  }
-
-  func findAnyByte(in bytes: Set<UInt8>, maxLength: Int? = nil) -> (offset: Int, byte: UInt8)? {
-    let searchLength = min(maxLength ?? readableBytes, readableBytes)
-    guard searchLength > 0 else { return nil }
-
-    let endIndex = readIndex + searchLength
-    for i in readIndex..<endIndex {
-      let currentByte = buffer[i]
-      if bytes.contains(currentByte) {
-        return (i - readIndex, currentByte)
-      }
-    }
-    return nil
-  }
-
-  func getByte(at offset: Int) -> UInt8? {
-    let index = readIndex + offset
-    guard index < writeIndex else { return nil }
-    return buffer[index]
-  }
-
-  func scan(for pattern: [UInt8], maxLength: Int? = nil) -> Int? {
-    let searchLength = min(maxLength ?? readableBytes, readableBytes)
-    guard searchLength >= pattern.count && !pattern.isEmpty else { return nil }
-
-    let endIndex = readIndex + searchLength - pattern.count + 1
-    for i in readIndex..<endIndex {
-      var matches = true
-      for (j, patternByte) in pattern.enumerated() where buffer[i + j] != patternByte {
-        matches = false
-        break
-      }
-      if matches {
-        return i - readIndex
-      }
-    }
-    return nil
-  }
-
-  @inlinable
-  func withUnsafeReadableBytes<T>(_ body: (UnsafeRawBufferPointer) throws -> T) rethrows -> T {
-    guard readableBytes > 0 else {
-      return try body(UnsafeRawBufferPointer(start: nil, count: 0))
-    }
-
-    return try buffer.withUnsafeBytes { allBytes in
-      let start = allBytes.baseAddress?.advanced(by: readIndex)
-      let readableBuffer = UnsafeRawBufferPointer(start: start, count: readableBytes)
-      return try body(readableBuffer)
-    }
   }
 
   func clear() {

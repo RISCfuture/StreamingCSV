@@ -11,7 +11,6 @@ public actor MemoryMappedFileDataSource: CSVDataSource {
 
   private let data: Data
   private var currentOffset: Int = 0
-  private let bufferSize: Int
 
   // MARK: - Computed Properties
 
@@ -37,7 +36,6 @@ public actor MemoryMappedFileDataSource: CSVDataSource {
 
     // Memory map the file
     self.data = try Data(contentsOf: url, options: .mappedIfSafe)
-    self.bufferSize = bufferSize
   }
 
   // MARK: - Methods

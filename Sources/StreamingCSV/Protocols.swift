@@ -89,18 +89,3 @@ public protocol CSVEncodable {
 /// - `Data` (Base64 encoded)
 /// - `Optional` (where `Wrapped: CSVCodable`)
 public typealias CSVCodable = CSVDecodable & CSVEncodable
-
-extension CSVEncodable {
-
-  /**
-   Encodes this value into a mutable array of CSV fields.
-  
-   This is a convenience method that appends the ``csvString`` representation
-   to the provided array.
-  
-   - Parameter fields: The array to append the encoded value to.
-   */
-  func encode(into fields: inout [String]) {
-    fields.append(csvString)
-  }
-}

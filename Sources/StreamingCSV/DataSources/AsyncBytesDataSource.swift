@@ -30,7 +30,6 @@ public actor AsyncBytesDataSource<S: AsyncSequence & Sendable>: CSVDataSource
 where S.Element == UInt8, S.AsyncIterator: Sendable {
   private let data: Data
   private var position: Int = 0
-  private let bufferSize: Int
 
   /// Creates a new data source from an AsyncBytes sequence.
   ///
@@ -41,8 +40,6 @@ where S.Element == UInt8, S.AsyncIterator: Sendable {
   ///   - bytes: The async sequence of bytes to read from.
   ///   - bufferSize: The size of the read buffer in bytes. Defaults to 65536 (64KB).
   public init(bytes: S, bufferSize: Int = 65536) async throws {
-    self.bufferSize = bufferSize
-
     // Collect all bytes into data
     var collectedData = Data()
     var iterator = bytes.makeAsyncIterator()

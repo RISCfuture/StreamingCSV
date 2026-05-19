@@ -46,12 +46,9 @@ import Foundation
  */
 public actor StreamingCSVReader {
   private let dataSource: any CSVDataSource
-  private let parser: CSVParser
   private let byteParser: ByteCSVParser
   private let bufferStrategy: AdaptiveBufferStrategy
   private var byteBuffer: CSVByteBuffer
-  private let bufferSize: Int
-  private let encoding: String.Encoding
   private var isAtEnd: Bool
   private var characteristics: CSVCharacteristics
 
@@ -99,7 +96,6 @@ public actor StreamingCSVReader {
     bufferSize: Int = 65536
   ) throws {
     self.dataSource = try FileDataSource(url: url, bufferSize: bufferSize)
-    self.parser = CSVParser(delimiter: delimiter, quote: quote, escape: escape)
     self.byteParser = ByteCSVParser(
       delimiter: delimiter,
       quote: quote,
@@ -108,8 +104,6 @@ public actor StreamingCSVReader {
     )
     self.bufferStrategy = AdaptiveBufferStrategy()
     self.byteBuffer = CSVByteBuffer(capacity: bufferSize)
-    self.encoding = encoding
-    self.bufferSize = bufferSize
     self.isAtEnd = false
     self.characteristics = CSVCharacteristics()
   }
@@ -145,7 +139,6 @@ public actor StreamingCSVReader {
       session: session,
       progressHandler: progressHandler
     )
-    self.parser = CSVParser(delimiter: delimiter, quote: quote, escape: escape)
     self.byteParser = ByteCSVParser(
       delimiter: delimiter,
       quote: quote,
@@ -154,8 +147,6 @@ public actor StreamingCSVReader {
     )
     self.bufferStrategy = AdaptiveBufferStrategy()
     self.byteBuffer = CSVByteBuffer(capacity: bufferSize)
-    self.encoding = encoding
-    self.bufferSize = bufferSize
     self.isAtEnd = false
     self.characteristics = CSVCharacteristics()
   }
@@ -180,7 +171,6 @@ public actor StreamingCSVReader {
     bufferSize: Int = 65536
   ) {
     self.dataSource = DataDataSource(data: data, bufferSize: bufferSize)
-    self.parser = CSVParser(delimiter: delimiter, quote: quote, escape: escape)
     self.byteParser = ByteCSVParser(
       delimiter: delimiter,
       quote: quote,
@@ -189,8 +179,6 @@ public actor StreamingCSVReader {
     )
     self.bufferStrategy = AdaptiveBufferStrategy()
     self.byteBuffer = CSVByteBuffer(capacity: bufferSize)
-    self.encoding = encoding
-    self.bufferSize = bufferSize
     self.isAtEnd = false
     self.characteristics = CSVCharacteristics()
   }
@@ -217,7 +205,6 @@ public actor StreamingCSVReader {
     bufferSize: Int = 65536
   ) async throws where S.Element == UInt8, S.AsyncIterator: Sendable {
     self.dataSource = try await AsyncBytesDataSource(bytes: bytes, bufferSize: bufferSize)
-    self.parser = CSVParser(delimiter: delimiter, quote: quote, escape: escape)
     self.byteParser = ByteCSVParser(
       delimiter: delimiter,
       quote: quote,
@@ -226,8 +213,6 @@ public actor StreamingCSVReader {
     )
     self.bufferStrategy = AdaptiveBufferStrategy()
     self.byteBuffer = CSVByteBuffer(capacity: bufferSize)
-    self.encoding = encoding
-    self.bufferSize = bufferSize
     self.isAtEnd = false
     self.characteristics = CSVCharacteristics()
   }
@@ -321,40 +306,6 @@ public actor StreamingCSVReader {
   }
 
   // MARK: - Methods
-
-  // Helper to create field ranges from parsed strings (for fast path compatibility)
-  private static func createFieldRangesFromStrings(_ fields: [String], in data: Data)
-    -> [CSVFieldRange]
-  {
-    var ranges: [CSVFieldRange] = []
-    var searchIndex = 0
-
-    for field in fields {
-      if let fieldData = field.data(using: .utf8) {
-        // Find this field's data in the original data starting from searchIndex
-        if let range = data[searchIndex...].range(of: fieldData) {
-          let absoluteStart = range.lowerBound
-          let absoluteEnd = range.upperBound
-          ranges.append(
-            CSVFieldRange(
-              start: absoluteStart,
-              end: absoluteEnd,
-              isQuoted: false
-            )
-          )
-          searchIndex = absoluteEnd + 1  // Skip delimiter
-        } else {
-          // Fallback: create empty range
-          ranges.append(CSVFieldRange(start: searchIndex, end: searchIndex, isQuoted: false))
-        }
-      } else {
-        // Fallback: create empty range
-        ranges.append(CSVFieldRange(start: searchIndex, end: searchIndex, isQuoted: false))
-      }
-    }
-
-    return ranges
-  }
 
   /// Reads the next row using the high-performance byte parser.
   ///
