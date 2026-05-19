@@ -171,11 +171,9 @@ actor AdaptiveBufferStrategy {
 
 struct CSVCharacteristics: Sendable {
   var hasQuotes: Bool = false
-  var hasMultilineFields: Bool = false
   var isFixedWidth: Bool = true
   var columnCount: Int?
   var isASCIIOnly: Bool = true
-  var averageRowSize: Int = 0
 
   private var rowCount: Int = 0
   private var totalBytes: Int = 0
@@ -186,7 +184,6 @@ struct CSVCharacteristics: Sendable {
   mutating func observe(rowBytes: CSVRowBytes, rawSize: Int) {
     rowCount += 1
     totalBytes += rawSize
-    averageRowSize = totalBytes / rowCount
 
     // Check for quotes
     if !hasQuotes {

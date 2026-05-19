@@ -16,7 +16,6 @@ import Foundation
  */
 public actor FileDataSource: CSVDataSource {
   private let fileHandle: FileHandle
-  private let bufferSize: Int
   private var isAtEnd: Bool = false
 
   /// The total size of the file in bytes.
@@ -37,7 +36,6 @@ public actor FileDataSource: CSVDataSource {
       throw CSVError.invalidURL
     }
     self.fileHandle = try FileHandle(forReadingFrom: url)
-    self.bufferSize = bufferSize
 
     // Get file size for progress tracking
     if let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),

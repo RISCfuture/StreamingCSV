@@ -18,7 +18,6 @@ import Foundation
 public actor DataDataSource: CSVDataSource {
   private let data: Data
   private var position: Int = 0
-  private let bufferSize: Int
 
   /// Creates a new data source from in-memory `Data`.
   ///
@@ -28,7 +27,6 @@ public actor DataDataSource: CSVDataSource {
   ///     (64KB).
   public init(data: Data, bufferSize: Int = 65536) {
     self.data = data
-    self.bufferSize = bufferSize
   }
 
   public func read(maxLength: Int) throws -> Data? {
