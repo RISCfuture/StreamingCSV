@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.3
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import CompilerPluginSupport
@@ -23,7 +23,7 @@ let package = Package(
     )
   ],
   dependencies: [
-    .package(url: "https://github.com/swiftlang/swift-syntax", from: "601.0.0"),
+    .package(url: "https://github.com/swiftlang/swift-syntax", from: "603.0.0"),
     .package(url: "https://github.com/stackotter/swift-macro-toolkit", from: "0.8.0"),
     .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.3")
   ],

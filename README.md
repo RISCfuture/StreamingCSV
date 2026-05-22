@@ -2,7 +2,7 @@
 
 [![Build and Test](https://github.com/riscfuture/StreamingCSV/actions/workflows/build.yml/badge.svg)](https://github.com/riscfuture/StreamingCSV/actions/workflows/build.yml)
 [![Documentation](https://github.com/riscfuture/StreamingCSV/actions/workflows/documentation.yml/badge.svg)](https://riscfuture.github.io/StreamingCSV/)
-[![Swift 5.10+](https://img.shields.io/badge/Swift-5.10+-orange.svg)](https://swift.org)
+[![Swift 6.3+](https://img.shields.io/badge/Swift-6.3+-orange.svg)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/Platforms-macOS%20|%20iOS%20|%20tvOS%20|%20watchOS%20|%20Linux%20|%20Windows-blue.svg)](https://swift.org)
 
 A high-performance, memory-efficient CSV reader and writer for Swift that 

@@ -1,12 +1,10 @@
 # CI Matrix Policy
 #
-# Category A (tools-version 6.2 + macOS 26 min): macos-26 + Swift 6.2
-# Category B (tools-version 6.2 + older macOS):  macos-15 + 6.2, macos-26 + 6.2
-# Category C (tools-version 6.0):                macos-15 + 6.1, macos-15 + 6.3, macos-26 + 6.3
-# Linux (if viable):                             ubuntu + Swift 6.1, ubuntu + Swift 6.3
+# tools-version 6.3 (requires Swift 6.3): macos-15 + 6.3, macos-26 + 6.3
+# Linux:                                  ubuntu + Swift 6.3
 #
-# When Swift 6.4 ships: bump 6.1→6.2 and 6.3→6.4 in Category C
-# When bumping tools-version to 6.2: drop 6.0/6.1, move to Category A or B
+# When Swift 6.4 ships: add 6.4 legs alongside 6.3
+# When bumping tools-version: drop Swift versions older than the new minimum
 
 name: CI
 
@@ -29,8 +27,6 @@ jobs:
       matrix:
         include:
           - os: macos-15
-            swift: "6.1"
-          - os: macos-15
             swift: "6.3"
           - os: macos-26
             swift: "6.3"
@@ -50,7 +46,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        swift: ["6.1", "6.3"]
+        swift: ["6.3"]
     container:
       image: swift:${{ matrix.swift }}
     steps:
