@@ -31,7 +31,7 @@ public protocol CSVDecodable {
 
   /**
    Creates a new instance by decoding from a CSV string value.
-  
+
    - Parameter csvString: The CSV field value to decode.
    - Returns: A new instance if decoding succeeds, or `nil` if the string
      cannot be parsed.
@@ -63,7 +63,7 @@ public protocol CSVEncodable {
 
   /**
    The CSV string representation of this value.
-  
+
    This property should return a string that can be used as a field value in
    CSV output. The string will be automatically quoted and escaped as needed
    by the CSV writer.

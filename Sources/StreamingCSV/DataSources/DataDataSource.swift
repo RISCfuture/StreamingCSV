@@ -25,7 +25,7 @@ public actor DataDataSource: CSVDataSource {
   ///   - data: The CSV data to read from.
   ///   - bufferSize: The size of the read buffer in bytes. Defaults to 65536
   ///     (64KB).
-  public init(data: Data, bufferSize: Int = 65536) {
+  public init(data: Data, bufferSize _: Int = 65536) {
     self.data = data
   }
 

@@ -7,7 +7,7 @@ import Foundation
 public enum CSVError: Error, LocalizedError {
   /**
    The data could not be encoded or decoded using the specified text encoding.
-  
+
    This error occurs when:
    - Binary data cannot be interpreted using the specified encoding when
      reading
@@ -17,7 +17,7 @@ public enum CSVError: Error, LocalizedError {
 
   /**
    The provided URL is invalid or not supported.
-  
+
    This error occurs when:
    - A file URL is expected but a different scheme is provided
    - A network URL is expected but a file URL is provided
@@ -26,7 +26,7 @@ public enum CSVError: Error, LocalizedError {
 
   /**
    A network error occurred during data transfer.
-  
+
    This error occurs when:
    - HTTP request fails
    - Response status code indicates an error
