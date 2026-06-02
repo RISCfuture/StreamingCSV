@@ -20,10 +20,10 @@ import Foundation
 public protocol CSVDecodableRow {
   /**
    Creates a new instance from an array of CSV field strings.
-  
+
    Implementations should validate the input and return `nil` if the fields
    cannot be parsed into a valid instance.
-  
+
    - Parameter fields: An array of string values representing the CSV fields.
    - Returns: A new instance if parsing succeeds, or `nil` if the fields are invalid.
    */
@@ -50,10 +50,10 @@ public protocol CSVDecodableRow {
 public protocol CSVEncodableRow {
   /**
    Converts this instance to an array of CSV field strings.
-  
+
    The returned array should contain string representations of all fields
    in the correct order for CSV output.
-  
+
    - Returns: An array of string values representing the CSV fields.
    */
   func toCSVRow() -> [String]

@@ -33,7 +33,7 @@ public struct CSVParser {
 
   /**
    Creates a new CSV parser with the specified configuration.
-  
+
    - Parameters:
      - delimiter: The character to use for separating fields. Defaults to
        comma (`,`).
@@ -50,13 +50,13 @@ public struct CSVParser {
 
   /**
    Parses a single CSV row string into an array of field values.
-  
+
    This method properly handles:
    - Quoted fields containing delimiters, newlines, or quotes
    - Escaped quotes within quoted fields
    - Empty fields
    - Whitespace preservation within fields
-  
+
    - Parameter line: The CSV row string to parse.
    - Returns: An array of field values extracted from the CSV row.
    */
@@ -111,11 +111,11 @@ public struct CSVParser {
 
   /**
    Parses multiple CSV rows from a text string.
-  
+
    This method handles multi-line fields properly by tracking quote state
    across line breaks. It automatically handles both Unix (`\n`) and Windows
    (`\r\n`) line endings.
-  
+
    - Parameter text: The CSV text containing multiple rows.
    - Returns: An array of arrays, where each inner array represents the fields of a CSV row.
    */
@@ -152,15 +152,15 @@ public struct CSVParser {
 
   /**
    Formats a single field value for CSV output.
-  
+
    This method automatically quotes fields that contain special characters
    such as:
-  
+
    - The delimiter character
    - Quote characters (which are also escaped)
    - Newline characters
    - Carriage return characters
-  
+
    - Parameter field: The field value to format.
    - Returns: The formatted field value, quoted and escaped if necessary.
    */
@@ -182,11 +182,11 @@ public struct CSVParser {
 
   /**
    Formats an array of field values into a CSV row string.
-  
+
    Each field is automatically quoted and escaped as necessary using
    ``formatField(_:)``.
    The fields are then joined with the delimiter character.
-  
+
    - Parameter fields: An array of field values to format.
    - Returns: A properly formatted CSV row string.
    */

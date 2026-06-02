@@ -34,11 +34,11 @@ import Foundation
 public protocol CSVDataDestination: Sendable {
   /**
    Writes data to the destination.
-  
+
    This method writes the provided data to the output destination. The data
    may be buffered internally for performance reasons. Call ``flush()`` to
    ensure all data is written.
-  
+
    - Parameter data: The data to write.
    - Throws: An error if the write operation fails.
    */
@@ -46,21 +46,21 @@ public protocol CSVDataDestination: Sendable {
 
   /**
    Flushes any buffered data to the destination.
-  
+
    This method ensures that all previously written data is actually sent to
    the underlying destination. It's automatically called when the destination
    is closed, but can be called explicitly for immediate writes.
-  
+
    - Throws: An error if the flush operation fails.
    */
   func flush() async throws
 
   /**
    Closes the data destination and releases any associated resources.
-  
+
    This method should be called when the destination is no longer needed.
    It automatically flushes any remaining buffered data before closing.
-  
+
    - Throws: An error if closing the destination fails.
    */
   func close() async throws

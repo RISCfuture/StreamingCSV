@@ -29,7 +29,7 @@ public actor MemoryMappedFileDataSource: CSVDataSource {
   /// - Parameter url: The URL containing the data.
   /// - Parameter bufferSize: The size of the buffer, in bytes.
   /// - Throws: If the URL is not a file URL.
-  public init(url: URL, bufferSize: Int = 65536) throws {
+  public init(url: URL, bufferSize _: Int = 65536) throws {
     guard url.isFileURL else {
       throw CSVError.invalidURL
     }

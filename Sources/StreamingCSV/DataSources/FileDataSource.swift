@@ -31,7 +31,7 @@ public actor FileDataSource: CSVDataSource {
   ///   - bufferSize: The size of the read buffer in bytes. Defaults to 65536
   ///     (64KB).
   /// - Throws: An error if the file cannot be opened for reading.
-  public init(url: URL, bufferSize: Int = 65536) throws {
+  public init(url: URL, bufferSize _: Int = 65536) throws {
     guard url.isFileURL else {
       throw CSVError.invalidURL
     }

@@ -36,10 +36,10 @@ public struct CSVFieldRange: Sendable {
 
   /**
    Extract the string value from the given data.
-  
+
    This method converts the byte range to a string using the specified encoding,
    handling CSV-specific concerns like quote unescaping for quoted fields.
-  
+
    - Parameters:
      - data: The source data buffer containing the CSV content
      - encoding: The string encoding to use (defaults to UTF-8)
@@ -118,11 +118,11 @@ public struct CSVRowBytes: Sendable {
 
   /**
    Get all fields as an array of strings.
-  
+
    This computed property converts all field ranges to strings in one
    operation. For better performance when accessing only some fields, use
    ``field(at:)`` instead.
-  
+
    - Returns: Array containing all field values as strings
    */
   public var stringFields: [String] {
@@ -131,7 +131,7 @@ public struct CSVRowBytes: Sendable {
 
   /**
    Creates a new CSV row bytes instance.
-  
+
    - Parameters:
      - data: The data buffer containing the CSV content
      - fields: Array of field ranges within the data
@@ -145,7 +145,7 @@ public struct CSVRowBytes: Sendable {
 
   /**
    Get field value at the specified index as a string.
-  
+
    - Parameter index: The zero-based index of the field to retrieve
    - Returns: The field value as a string, or `nil` if the index is out of bounds
    */
@@ -224,7 +224,7 @@ public struct ByteCSVParser: Sendable {
   /**
    Parse a complete row from data, returning field ranges
    Returns nil if no complete row is found
-  
+
    - Parameters:
      - data: The data to parse
      - isEndOfFile: If true, treats end of data as end of row (for last row without newline)
@@ -414,5 +414,4 @@ public struct ByteCSVParser: Sendable {
       return inQuotes ? nil : data.count
     }
   }
-
 }

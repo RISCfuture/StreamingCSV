@@ -39,7 +39,7 @@ where S.Element == UInt8, S.AsyncIterator: Sendable {
   /// - Parameters:
   ///   - bytes: The async sequence of bytes to read from.
   ///   - bufferSize: The size of the read buffer in bytes. Defaults to 65536 (64KB).
-  public init(bytes: S, bufferSize: Int = 65536) async throws {
+  public init(bytes: S, bufferSize _: Int = 65536) async throws {
     // Collect all bytes into data
     var collectedData = Data()
     var iterator = bytes.makeAsyncIterator()
