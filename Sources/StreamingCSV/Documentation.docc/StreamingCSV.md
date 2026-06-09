@@ -1,6 +1,6 @@
 # ``StreamingCSV``
 
-A high-performance, memory-efficient CSV reader and writer for Swift that 
+A high-performance, memory-efficient CSV reader and writer for Swift that
 processes files row by row.
 
 @Metadata {
@@ -11,8 +11,8 @@ processes files row by row.
 ## Overview
 
 StreamingCSV provides a modern Swift API for reading and writing CSV files with
-minimal memory overhead. Unlike traditional CSV parsers that load entire files 
-into memory, StreamingCSV processes data row by row, making it suitable for 
+minimal memory overhead. Unlike traditional CSV parsers that load entire files
+into memory, StreamingCSV processes data row by row, making it suitable for
 files of any size.
 
 ### Key Features

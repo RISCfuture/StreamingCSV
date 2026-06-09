@@ -5,7 +5,7 @@
 [![Swift 6.3+](https://img.shields.io/badge/Swift-6.3+-orange.svg)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/Platforms-macOS%20|%20iOS%20|%20tvOS%20|%20watchOS%20|%20Linux%20|%20Windows-blue.svg)](https://swift.org)
 
-A high-performance, memory-efficient CSV reader and writer for Swift that 
+A high-performance, memory-efficient CSV reader and writer for Swift that
 processes data row by row without loading entire files into memory.
 
 ## Features
@@ -170,6 +170,7 @@ struct FlexibleRecord {
 ```
 
 The `@Fields` macro provides two modes:
+
 - `@Fields(n)` - Collects exactly n fields, padding with empty strings on output
 - `@Fields` - Collects all remaining fields (must be the last property)
 

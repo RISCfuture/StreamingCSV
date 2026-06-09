@@ -4,12 +4,12 @@ Learn how to use StreamingCSV for common CSV processing tasks.
 
 ## Reading CSV Files
 
-StreamingCSV can read CSV data from various sources including local files, 
+StreamingCSV can read CSV data from various sources including local files,
 network URLs, in-memory data, and async byte streams.
 
 ### Reading from Files
 
-The simplest way to read a CSV file is using `readRow()`, which returns each row 
+The simplest way to read a CSV file is using `readRow()`, which returns each row
 as an array of strings:
 
 ```swift

@@ -284,6 +284,7 @@ for chunk in result.chunks {
 ```
 
 The parallel reader automatically:
+
 - Memory-maps the file for efficient access
 - Divides the file into chunks aligned with row boundaries
 - Processes chunks concurrently using multiple workers
@@ -310,6 +311,7 @@ while let row = try await reader.readRow() {
 ```
 
 Memory mapping provides:
+
 - Zero-copy access to file contents
 - Automatic paging by the OS
 - Minimal memory footprint even for gigabyte-sized files
@@ -428,24 +430,28 @@ do {
 ## Best Practices
 
 ### Memory Management
+
 1. Use streaming for large files instead of loading everything into memory
 2. Choose appropriate buffer sizes based on your data and memory constraints
 3. Consider memory-mapped files for very large datasets
 4. Use parallel processing for CPU-bound operations on large files
 
 ### Performance Optimization
+
 1. Use byte-level parsing when you need maximum performance
 2. Enable parallel processing for files larger than a few megabytes
 3. Let the adaptive buffer strategy optimize buffer sizes automatically
 4. Consider memory mapping for random access patterns
 
 ### Error Handling
+
 1. Always call `flush()` on writers to ensure all data is saved
 2. Use defer blocks to ensure proper cleanup
 3. Implement retry logic for network sources
 4. Validate data types when using typed rows
 
 ### Type Safety
+
 1. Prefer `@CSVRowBuilder` macros for compile-time safety
 2. Use optionals for fields that might be empty
 3. Implement custom `CSVCodable` types for complex data
