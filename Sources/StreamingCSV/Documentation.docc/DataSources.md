@@ -1,13 +1,13 @@
 # Working with Data Sources
 
-Learn how to read and write CSV data from various sources including files, 
+Learn how to read and write CSV data from various sources including files,
 networks, and memory.
 
 ## Overview
 
 StreamingCSV provides a flexible architecture for reading CSV data from multiple
 sources and writing to various destinations. This is achieved through the
-``CSVDataSource`` and ``CSVDataDestination`` protocols, which abstract the 
+``CSVDataSource`` and ``CSVDataDestination`` protocols, which abstract the
 underlying I/O operations.
 
 ## Reading from Different Sources
@@ -49,7 +49,7 @@ let reader = try await StreamingCSVReader(
 
 ### In-Memory Data
 
-Process CSV data that's already loaded in memory, useful for data received from 
+Process CSV data that's already loaded in memory, useful for data received from
 APIs or generated programmatically:
 
 ```swift
@@ -274,7 +274,7 @@ significantly reducing processing time for large datasets on multi-core systems.
 
 - **DataDataSource** is ideal for small to medium CSV data already in memory
 - For large datasets, prefer file-based or streaming approaches
-- In-memory destinations are convenient but use more memory than file-based 
+- In-memory destinations are convenient but use more memory than file-based
 destinations
 
 ## Error Handling
