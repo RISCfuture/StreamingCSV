@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-06-26
+
+### Changed
+
+- Adopt the Approachable Concurrency upcoming-feature flags
+  (`NonisolatedNonsendingByDefault` and `InferIsolatedConformances`).
+  Existing public async behavior is preserved — the `CSVRowStream` and
+  `TypedCSVRowStream` row iterators continue to run off the caller's
+  executor — so this is a non-source-breaking concurrency modernization.
+
+### Internal
+
+- Remove an unaudited `@unchecked Sendable` escape hatch from the internal
+  `CSVByteBuffer`. The buffer is exclusively owned and serialized by the
+  `StreamingCSVReader` actor, so the conformance was unnecessary and the
+  type is now a plain actor-confined reference.
+
 ## [2.0.0] 2025-12-21
 
 ### Added
