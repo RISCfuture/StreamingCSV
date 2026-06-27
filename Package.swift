@@ -4,6 +4,11 @@
 import CompilerPluginSupport
 import PackageDescription
 
+let approachableConcurrency: [SwiftSetting] = [
+  .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+  .enableUpcomingFeature("InferIsolatedConformances")
+]
+
 let package = Package(
   name: "StreamingCSV",
   defaultLocalization: "en",
@@ -35,7 +40,8 @@ let package = Package(
         .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
         .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
         .product(name: "MacroToolkit", package: "swift-macro-toolkit")
-      ]
+      ],
+      swiftSettings: approachableConcurrency
     ),
     // Targets are the basic building blocks of a package, defining a module or a test suite.
     // Targets can depend on other targets in this package and products from dependencies.
@@ -46,12 +52,14 @@ let package = Package(
       ],
       resources: [
         .process("Resources")
-      ]
+      ],
+      swiftSettings: approachableConcurrency
     ),
     .testTarget(
       name: "StreamingCSVTests",
       dependencies: ["StreamingCSV"],
-      resources: [.copy("Fixtures")]
+      resources: [.copy("Fixtures")],
+      swiftSettings: approachableConcurrency
     )
   ],
   swiftLanguageModes: [.v6]

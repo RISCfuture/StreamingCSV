@@ -1,6 +1,6 @@
 import Foundation
 
-final class CSVByteBuffer: @unchecked Sendable {
+final class CSVByteBuffer {
   @usableFromInline internal var buffer: [UInt8]
   @usableFromInline internal var readIndex: Int = 0
   @usableFromInline internal var writeIndex: Int = 0
