@@ -98,6 +98,7 @@ where Source.Element == Data {
       self.buffer.reserveCapacity(bufferCapacity)
     }
 
+    @concurrent
     public mutating func next() async throws -> CSVRowBytes? {
       // Line feed and carriage return bytes
       let lf: UInt8 = 0x0A  // \n

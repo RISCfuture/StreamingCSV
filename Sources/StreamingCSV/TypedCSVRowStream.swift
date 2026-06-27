@@ -89,6 +89,7 @@ where Source.Element == Data, T: Sendable {
       self.iterator = iterator
     }
 
+    @concurrent
     public mutating func next() async throws -> T? {
       guard let rowBytes = try await iterator.next() else {
         return nil
