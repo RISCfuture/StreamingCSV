@@ -28,9 +28,9 @@ let package = Package(
     )
   ],
   dependencies: [
-    .package(url: "https://github.com/swiftlang/swift-syntax", from: "603.0.0"),
-    .package(url: "https://github.com/stackotter/swift-macro-toolkit", from: "0.8.0"),
-    .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.3")
+    .package(url: "https://github.com/swiftlang/swift-syntax", from: "603.0.2"),
+    .package(url: "https://github.com/stackotter/swift-macro-toolkit", from: "0.9.0"),
+    .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.5.0")
   ],
   targets: [
     // Macro implementation
