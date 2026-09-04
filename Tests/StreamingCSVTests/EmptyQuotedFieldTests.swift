@@ -3,11 +3,11 @@ import Testing
 
 @testable import StreamingCSV
 
-@Suite("Empty Quoted Fields")
-struct EmptyQuotedFieldTests {
+@Suite
+struct `Empty quoted fields` {
 
-  @Test("Parse empty quoted fields correctly")
-  func emptyQuotedFields() async throws {
+  @Test
+  func `parses empty quoted fields`() async throws {
     // Create test CSV with empty quoted fields
     let csvContent = """
       "field1","field2","field3","field4","field5"
@@ -41,8 +41,8 @@ struct EmptyQuotedFieldTests {
     #expect(row2[4].isEmpty, "Last field should be empty")
   }
 
-  @Test("Parse rows with trailing empty fields")
-  func problematicAPTBaseRow() async throws {
+  @Test
+  func `parses rows with trailing empty fields`() async throws {
     // Recreate the problematic structure from APT_BASE.csv
     // Row 126 (HEY) seems to have issues with empty quoted fields
     let csvContent = """

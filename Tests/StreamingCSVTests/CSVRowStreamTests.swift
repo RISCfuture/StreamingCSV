@@ -34,11 +34,11 @@ struct ChunkedDataSequence: AsyncSequence, Sendable {
   }
 }
 
-@Suite("CSVRowStream Tests")
-struct CSVRowStreamTests {
+@Suite
+struct `CSVRowStream tests` {
 
   @Test
-  func testBasicStreaming() async throws {
+  func `streams rows`() async throws {
     let csvContent = """
       Name,Age,City
       Alice,30,New York
@@ -63,7 +63,7 @@ struct CSVRowStreamTests {
   }
 
   @Test
-  func testSingleByteChunks() async throws {
+  func `streams rows from single-byte chunks`() async throws {
     let csvContent = "A,B\n1,2\n3,4"
     let data = csvContent.data(using: .utf8)!
     let chunkedStream = ChunkedDataSequence(data: data, chunkSize: 1)
@@ -81,7 +81,7 @@ struct CSVRowStreamTests {
   }
 
   @Test
-  func testLargeChunks() async throws {
+  func `streams rows from large chunks`() async throws {
     let csvContent = "Name,Value\nTest,123\nAnother,456"
     let data = csvContent.data(using: .utf8)!
     let chunkedStream = ChunkedDataSequence(data: data, chunkSize: 1000)
@@ -99,7 +99,7 @@ struct CSVRowStreamTests {
   }
 
   @Test
-  func testQuotedFieldsAcrossChunks() async throws {
+  func `parses quoted fields spanning chunks`() async throws {
     let csvContent = """
       Name,Description
       "Product A","A very long description that spans multiple chunks"
@@ -122,7 +122,7 @@ struct CSVRowStreamTests {
   }
 
   @Test
-  func testEscapedQuotes() async throws {
+  func `parses escaped quotes`() async throws {
     // Note: CSV uses "" to escape quotes within quoted fields
     let csvContent = "Name,Quote\nAlice,\"She said \"\"Hello\"\"\"\nBob,\"A \"\"quoted\"\" word\""
 
@@ -142,7 +142,7 @@ struct CSVRowStreamTests {
   }
 
   @Test
-  func testMultilineQuotedFields() async throws {
+  func `parses multiline quoted fields`() async throws {
     let csvContent = "Name,Address\n\"John\",\"123 Main St\nApt 4\nNew York\""
 
     let data = csvContent.data(using: .utf8)!
@@ -160,7 +160,7 @@ struct CSVRowStreamTests {
   }
 
   @Test
-  func testEmptyFields() async throws {
+  func `parses empty fields`() async throws {
     let csvContent = "A,B,C\n1,,3\n,2,\n,,"
 
     let data = csvContent.data(using: .utf8)!
@@ -180,7 +180,7 @@ struct CSVRowStreamTests {
   }
 
   @Test
-  func testCRLFLineEndings() async throws {
+  func `parses CRLF line endings`() async throws {
     let csvContent = "A,B\r\n1,2\r\n3,4"
 
     let data = csvContent.data(using: .utf8)!
@@ -199,7 +199,7 @@ struct CSVRowStreamTests {
   }
 
   @Test
-  func testEmptyInput() async throws {
+  func `yields no rows for empty input`() async throws {
     let data = Data()
     let chunkedStream = ChunkedDataSequence(data: data, chunkSize: 10)
     let rowStream = CSVRowStream(source: chunkedStream)
@@ -213,7 +213,7 @@ struct CSVRowStreamTests {
   }
 
   @Test
-  func testSingleRow() async throws {
+  func `parses a single row`() async throws {
     let csvContent = "A,B,C"
 
     let data = csvContent.data(using: .utf8)!
@@ -230,7 +230,7 @@ struct CSVRowStreamTests {
   }
 
   @Test
-  func testCustomDelimiter() async throws {
+  func `parses a custom delimiter`() async throws {
     let csvContent = "A;B;C\n1;2;3"
 
     let data = csvContent.data(using: .utf8)!
@@ -248,7 +248,7 @@ struct CSVRowStreamTests {
   }
 
   @Test
-  func testLargeData() async throws {
+  func `streams a large document`() async throws {
     var csvContent = "ID,Value,Description\n"
     for i in 1...1000 {
       csvContent += "\(i),\(i * 100),\"Description for item \(i)\"\n"
@@ -276,7 +276,7 @@ struct CSVRowStreamTests {
   }
 
   @Test
-  func testFieldAtIndex() async throws {
+  func `returns a field by index`() async throws {
     let csvContent = "A,B,C,D,E\n1,2,3,4,5"
 
     let data = csvContent.data(using: .utf8)!
@@ -295,7 +295,7 @@ struct CSVRowStreamTests {
   }
 
   @Test
-  func testConvenienceInitializer() async throws {
+  func `streams from the unlabeled initializer`() async throws {
     let csvContent = "A,B\n1,2"
     let data = csvContent.data(using: .utf8)!
     let chunkedStream = ChunkedDataSequence(data: data, chunkSize: 10)
@@ -327,10 +327,10 @@ private struct TestPerson: CSVDecodableRow, Sendable {
   }
 }
 
-@Suite("TypedCSVRowStream Tests")
-struct TypedCSVRowStreamTests {
+@Suite
+struct `TypedCSVRowStream tests` {
   @Test
-  func testTypedStreaming() async throws {
+  func `streams decoded rows`() async throws {
     // Use data rows only (no header that would fail to parse)
     let csvContent = "Alice,30,New York\nBob,25,Los Angeles\nCharlie,35,Chicago"
 
@@ -352,7 +352,7 @@ struct TypedCSVRowStreamTests {
   }
 
   @Test
-  func testTypedMethodOnCSVRowStream() async throws {
+  func `streams decoded rows through typed(as:)`() async throws {
     // Use data rows only (no header that would fail to parse)
     let csvContent = "Alice,30,Boston\nBob,25,Seattle"
 
@@ -371,7 +371,7 @@ struct TypedCSVRowStreamTests {
   }
 
   @Test
-  func testReturnsNilOnInvalidRow() async throws {
+  func `returns nil for a row it cannot decode`() async throws {
     // First row is valid, second is invalid (Age is not an Int)
     let csvContent = "Alice,30,New York\nInvalid,NotANumber,Test"
 
@@ -401,10 +401,10 @@ private struct SimpleRecord: CSVDecodableRow, Sendable {
   }
 }
 
-@Suite("StreamingCSVReader Stream Factory Tests")
-struct StreamingCSVReaderStreamFactoryTests {
+@Suite
+struct `StreamingCSVReader stream factory tests` {
   @Test
-  func testStreamFactoryMethod() async throws {
+  func `builds a row stream`() async throws {
     let csvContent = "A,B,C\n1,2,3\n4,5,6"
 
     let data = csvContent.data(using: .utf8)!
@@ -423,7 +423,7 @@ struct StreamingCSVReaderStreamFactoryTests {
   }
 
   @Test
-  func testTypedStreamFactoryMethod() async throws {
+  func `builds a typed row stream`() async throws {
     // Use data rows only (header would parse successfully as SimpleRecord since both fields are strings)
     let csvContent = "1,First\n2,Second\n3,Third"
 
@@ -443,7 +443,7 @@ struct StreamingCSVReaderStreamFactoryTests {
   }
 
   @Test
-  func testStreamWithCustomDelimiter() async throws {
+  func `builds a row stream with a custom delimiter`() async throws {
     let csvContent = "A|B|C\n1|2|3"
 
     let data = csvContent.data(using: .utf8)!

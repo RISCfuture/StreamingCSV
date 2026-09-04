@@ -102,11 +102,11 @@ struct OptionalFieldsRecord {
   @Field var status: Bool
 }
 
-@Suite("CSV Macro Tests")
-struct CSVMacroTests {
+@Suite
+struct `CSV macro tests` {
 
   @Test
-  func testPersonStruct() throws {
+  func `round-trips a struct of required fields`() throws {
     // Test encoding
     let person = Person(name: "Alice", age: 25, score: 95.5)
     let row = person.toCSVRow()
@@ -124,7 +124,7 @@ struct CSVMacroTests {
   }
 
   @Test
-  func testProductWithOptional() throws {
+  func `round-trips a struct with an optional field`() throws {
     // Test with optional present
     let product1 = Product(
       id: 1,
@@ -151,7 +151,7 @@ struct CSVMacroTests {
   }
 
   @Test
-  func testReadRowParsed() async throws {
+  func `reads rows as a macro-generated type`() async throws {
     // Create a test CSV file
     let tempURL = FileManager.default.temporaryDirectory
       .appendingPathComponent(UUID().uuidString)
@@ -186,7 +186,7 @@ struct CSVMacroTests {
   }
 
   @Test
-  func testWriteRowParsed() async throws {
+  func `writes rows from a macro-generated type`() async throws {
     let tempURL = FileManager.default.temporaryDirectory
       .appendingPathComponent(UUID().uuidString)
       .appendingPathExtension("csv")
@@ -215,7 +215,7 @@ struct CSVMacroTests {
   }
 
   @Test
-  func testFieldsWithFixedCount() throws {
+  func `expands @Fields with a fixed count`() throws {
     // Test parsing with all fields present
     let record1 = try #require(ScoreRecord(from: ["001", "Alice", "85", "90", "88", "A"]))
     #expect(record1.id == "001")
@@ -241,7 +241,7 @@ struct CSVMacroTests {
   }
 
   @Test
-  func testFieldsWithRemainingFields() throws {
+  func `expands @Fields over the remaining fields`() throws {
     // Test with no extra fields
     let record1 = try #require(FlexibleRecord(from: ["001", "Item1"]))
     #expect(record1.tags.isEmpty)
@@ -256,7 +256,7 @@ struct CSVMacroTests {
   }
 
   @Test
-  func testFieldsCombined() throws {
+  func `combines @Fields with individual fields`() throws {
     // Test parsing
     let record = try #require(
       ComplexRecord(from: ["001", "Test", "100", "95", "extra1", "extra2", "extra3"])
@@ -278,7 +278,7 @@ struct CSVMacroTests {
   }
 
   @Test
-  func testFieldsWithOptionalTypes() throws {
+  func `skips elements a @Fields array cannot parse`() throws {
     let record = try #require(OptionalFieldsRecord(from: ["001", "1.5", "2.5", "3.5", "true"]))
     #expect(record.values == [1.5, 2.5, 3.5])
     #expect(record.status == true)
@@ -292,7 +292,7 @@ struct CSVMacroTests {
   }
 
   @Test
-  func testMixedRawAndParsed() async throws {
+  func `mixes raw and macro-generated row access`() async throws {
     let tempURL = FileManager.default.temporaryDirectory
       .appendingPathComponent(UUID().uuidString)
       .appendingPathExtension("csv")
@@ -328,7 +328,7 @@ struct CSVMacroTests {
   // MARK: - Tests for new decoder/encoder-only macros
 
   @Test
-  func testDecoderOnlyMacro() throws {
+  func `generates a decoder-only conformance`() throws {
     // Test valid input
     let fields = ["Alice", "30", "New York"]
     let person = try #require(DecoderOnlyPerson(from: fields))
@@ -355,7 +355,7 @@ struct CSVMacroTests {
   }
 
   @Test
-  func testEncoderOnlyMacro() throws {
+  func `generates an encoder-only conformance`() throws {
     let report = EncoderOnlyReport(
       timestamp: "2024-01-15T10:30:00",
       status: "OK",
@@ -367,7 +367,7 @@ struct CSVMacroTests {
   }
 
   @Test
-  func testDecoderWithArrays() throws {
+  func `decodes array fields`() throws {
     // Test with all fields populated
     let fields = ["001", "85", "90", "88", "tag1", "tag2", "tag3"]
     let record = try #require(DecoderWithArrays(from: fields))
@@ -391,7 +391,7 @@ struct CSVMacroTests {
   }
 
   @Test
-  func testEncoderWithArrays() throws {
+  func `encodes array fields`() throws {
     // Test with full arrays
     let record = EncoderWithArrays(
       id: "001",
@@ -424,7 +424,7 @@ struct CSVMacroTests {
   }
 
   @Test
-  func testProtocolConformance() throws {
+  func `declares the generated protocol conformances`() throws {
     // DecoderOnlyPerson should conform to CSVDecodableRow
     let _: any CSVDecodableRow.Type = DecoderOnlyPerson.self
 
