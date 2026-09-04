@@ -229,7 +229,7 @@ struct MemoryMappedFileDataSourceEdgeCases {
   func nonExistentFile() throws {
     let url = URL(fileURLWithPath: "/tmp/non_existent_file_\(UUID().uuidString).csv")
 
-    #expect(throws: Error.self) {
+    #expect(throws: (any Error).self) {
       _ = try MemoryMappedFileDataSource(url: url)
     }
   }
@@ -241,7 +241,7 @@ struct MemoryMappedFileDataSourceEdgeCases {
     try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
     defer { try? FileManager.default.removeItem(at: tempDir) }
 
-    #expect(throws: Error.self) {
+    #expect(throws: (any Error).self) {
       _ = try MemoryMappedFileDataSource(url: tempDir)
     }
   }

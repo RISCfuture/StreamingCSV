@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /// An asynchronous sequence that transforms a stream of Data chunks into CSV rows.
 ///

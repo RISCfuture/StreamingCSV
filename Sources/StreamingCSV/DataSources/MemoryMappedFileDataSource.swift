@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /**
  A data source that uses memory mapping for efficient file access.

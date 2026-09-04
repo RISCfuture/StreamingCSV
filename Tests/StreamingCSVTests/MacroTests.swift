@@ -426,14 +426,14 @@ struct CSVMacroTests {
   @Test
   func testProtocolConformance() throws {
     // DecoderOnlyPerson should conform to CSVDecodableRow
-    let _: CSVDecodableRow.Type = DecoderOnlyPerson.self
+    let _: any CSVDecodableRow.Type = DecoderOnlyPerson.self
 
     // EncoderOnlyReport should conform to CSVEncodableRow
-    let _: CSVEncodableRow.Type = EncoderOnlyReport.self
+    let _: any CSVEncodableRow.Type = EncoderOnlyReport.self
 
     // Person should conform to CSVRow (and thus both protocols)
-    let _: CSVRow.Type = Person.self
-    let _: CSVDecodableRow.Type = Person.self
-    let _: CSVEncodableRow.Type = Person.self
+    let _: any CSVRow.Type = Person.self
+    let _: any CSVDecodableRow.Type = Person.self
+    let _: any CSVEncodableRow.Type = Person.self
   }
 }

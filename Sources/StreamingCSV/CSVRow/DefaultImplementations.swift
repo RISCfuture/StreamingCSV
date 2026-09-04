@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 // swiftlint:disable missing_docs
 

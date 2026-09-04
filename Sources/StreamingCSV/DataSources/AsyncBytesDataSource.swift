@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /**
  A data source that reads CSV data from an AsyncBytes sequence.

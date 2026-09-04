@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /// Errors that can occur during CSV processing.
 ///

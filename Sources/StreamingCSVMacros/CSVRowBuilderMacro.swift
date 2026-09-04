@@ -1,7 +1,7 @@
 import MacroToolkit
-import SwiftSyntax
+public import SwiftSyntax
 import SwiftSyntaxBuilder
-import SwiftSyntaxMacros
+public import SwiftSyntaxMacros
 
 public struct CSVRowBuilderMacro: MemberMacro, ExtensionMacro, MemberAttributeMacro {
 
