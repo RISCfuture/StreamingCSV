@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /**
  A data destination that writes CSV data to an in-memory Data buffer.

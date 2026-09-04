@@ -3,7 +3,7 @@ import SwiftSyntaxMacros
 
 @main
 struct StreamingCSVMacrosPlugin: CompilerPlugin {
-  let providingMacros: [Macro.Type] = [
+  let providingMacros: [any Macro.Type] = [
     CSVRowBuilderMacro.self,
     CSVRowDecoderBuilderMacro.self,
     CSVRowEncoderBuilderMacro.self,

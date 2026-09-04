@@ -1,6 +1,6 @@
 import MacroToolkit
-import SwiftSyntax
-import SwiftSyntaxMacros
+public import SwiftSyntax
+public import SwiftSyntaxMacros
 
 public struct FieldMacro: PeerMacro {
   public static func expansion(

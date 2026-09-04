@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /// A parallel CSV reader for processing large files using multiple cores
 public actor ParallelCSVReader {

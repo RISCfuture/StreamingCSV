@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /// A protocol that defines a data destination for writing CSV data.
 ///

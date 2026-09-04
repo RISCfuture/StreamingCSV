@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /// A field range representing the byte positions of a CSV field within raw data.
 ///

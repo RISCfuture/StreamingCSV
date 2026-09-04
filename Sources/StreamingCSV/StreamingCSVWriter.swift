@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /**
  A streaming CSV writer that efficiently writes large CSV files row by row.
