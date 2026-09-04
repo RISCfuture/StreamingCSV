@@ -3,11 +3,11 @@ import Testing
 
 @testable import StreamingCSV
 
-@Suite("Data Source Tests")
-struct DataSourceTests {
+@Suite
+struct `Data source tests` {
 
   @Test
-  func testDataDataSource() async throws {
+  func `reads from a Data source`() async throws {
     let csvContent = """
       Name,Age,City
       Alice,30,New York
@@ -35,7 +35,7 @@ struct DataSourceTests {
   }
 
   @Test
-  func testAsyncBytesDataSource() async throws {
+  func `reads from an async bytes source`() async throws {
     let csvContent = """
       ID,Name,Score
       1,Alice,95
@@ -88,7 +88,7 @@ struct DataSourceTests {
   }
 
   @Test
-  func testLargeDataWithDataSource() async throws {
+  func `reads a large document from a source`() async throws {
     // Generate a large CSV dataset
     var csvContent = "ID,Value,Description\n"
     for i in 1...1000 {
@@ -117,7 +117,7 @@ struct DataSourceTests {
   }
 
   @Test
-  func testQuotedFieldsWithDataSource() async throws {
+  func `parses quoted fields from a source`() async throws {
     let csvContent = """
       Name,Description,Price
       "Laptop, Pro","High-performance, 16GB RAM",1299.99
@@ -142,7 +142,7 @@ struct DataSourceTests {
   }
 
   @Test
-  func testEmptyDataSource() async throws {
+  func `yields no rows for an empty source`() async throws {
     let data = Data()
     let reader = StreamingCSVReader(data: data)
 
@@ -151,7 +151,7 @@ struct DataSourceTests {
   }
 
   @Test
-  func testAsyncSequenceWithDataSource() async throws {
+  func `iterates a source as an async sequence`() async throws {
     let csvContent = """
       A,B,C
       1,2,3
@@ -173,11 +173,11 @@ struct DataSourceTests {
   }
 }
 
-@Suite("Data Destination Tests")
-struct DataDestinationTests {
+@Suite
+struct `Data destination tests` {
 
   @Test
-  func testInMemoryWriter() async throws {
+  func `writes to an in-memory destination`() async throws {
     let (writer, destination) = StreamingCSVWriter.inMemory()
 
     try await writer.writeRow(["Name", "Age", "City"])
@@ -194,7 +194,7 @@ struct DataDestinationTests {
   }
 
   @Test
-  func testRoundTripWithMemory() async throws {
+  func `round-trips through an in-memory destination`() async throws {
     // Write to memory
     let (writer, destination) = StreamingCSVWriter.inMemory()
 
@@ -225,7 +225,7 @@ struct DataDestinationTests {
   }
 
   @Test
-  func testLargeDataWithDestination() async throws {
+  func `writes a large document to a destination`() async throws {
     let (writer, destination) = StreamingCSVWriter.inMemory()
 
     // Write header
@@ -254,7 +254,7 @@ struct DataDestinationTests {
   }
 
   @Test
-  func testQuotedFieldsWithDestination() async throws {
+  func `quotes fields written to a destination`() async throws {
     let (writer, destination) = StreamingCSVWriter.inMemory()
 
     try await writer.writeRow(["Product", "Description", "Price"])

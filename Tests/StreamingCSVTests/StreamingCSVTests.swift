@@ -3,46 +3,46 @@ import Testing
 
 @testable import StreamingCSV
 
-@Suite("CSV Parser Tests")
-struct CSVParserTests {
+@Suite
+struct `CSVParser tests` {
 
   @Test
-  func testSimpleParsing() {
+  func `parses a simple row`() {
     let parser = CSVParser()
     let row = parser.parseRow(from: "John,30,New York")
     #expect(row == ["John", "30", "New York"])
   }
 
   @Test
-  func testQuotedFields() {
+  func `parses quoted fields`() {
     let parser = CSVParser()
     let row = parser.parseRow(from: "\"John, Jr.\",30,\"New York\"")
     #expect(row == ["John, Jr.", "30", "New York"])
   }
 
   @Test
-  func testEscapedQuotes() {
+  func `parses escaped quotes`() {
     let parser = CSVParser()
     let row = parser.parseRow(from: "\"She said \"\"Hello\"\"\",30,City")
     #expect(row == ["She said \"Hello\"", "30", "City"])
   }
 
   @Test
-  func testEmptyFields() {
+  func `parses empty fields`() {
     let parser = CSVParser()
     let row = parser.parseRow(from: "John,,Doe")
     #expect(row == ["John", "", "Doe"])
   }
 
   @Test
-  func testCustomDelimiter() {
+  func `parses a custom delimiter`() {
     let parser = CSVParser(delimiter: ";")
     let row = parser.parseRow(from: "John;30;New York")
     #expect(row == ["John", "30", "New York"])
   }
 
   @Test
-  func testFormatField() {
+  func `formats a field`() {
     let parser = CSVParser()
     #expect(parser.formatField("Simple") == "Simple")
     #expect(parser.formatField("With,Comma") == "\"With,Comma\"")
@@ -51,22 +51,22 @@ struct CSVParserTests {
   }
 
   @Test
-  func testFormatRow() {
+  func `formats a row`() {
     let parser = CSVParser()
     let formatted = parser.formatRow(["John", "30", "New York, NY"])
     #expect(formatted == "John,30,\"New York, NY\"")
   }
 }
 
-@Suite("StreamingCSVReader Tests", .serialized)
-struct StreamingCSVReaderTests {
+@Suite(.serialized)
+struct `StreamingCSVReader tests` {
 
   func fixtureURL(_ name: String) -> URL {
     Bundle.module.url(forResource: "Fixtures/\(name)", withExtension: nil)!
   }
 
   @Test
-  func testReadRawSimpleCSV() async throws {
+  func `reads a simple CSV`() async throws {
     let url = fixtureURL("simple.csv")
     let reader = try StreamingCSVReader(url: url)
 
@@ -87,7 +87,7 @@ struct StreamingCSVReaderTests {
   }
 
   @Test
-  func testSkipRows() async throws {
+  func `skips rows`() async throws {
     let url = fixtureURL("simple.csv")
     let reader = try StreamingCSVReader(url: url)
 
@@ -108,7 +108,7 @@ struct StreamingCSVReaderTests {
   }
 
   @Test
-  func testSkipRowsBeyondEOF() async throws {
+  func `stops skipping at the end of the file`() async throws {
     let url = fixtureURL("simple.csv")
     let reader = try StreamingCSVReader(url: url)
 
@@ -122,7 +122,7 @@ struct StreamingCSVReaderTests {
   }
 
   @Test
-  func testReadRawQuotedCSV() async throws {
+  func `reads quoted fields`() async throws {
     let url = fixtureURL("quoted.csv")
     let reader = try StreamingCSVReader(url: url)
 
@@ -140,7 +140,7 @@ struct StreamingCSVReaderTests {
   }
 
   @Test
-  func testReadRawMultilineCSV() async throws {
+  func `reads multiline fields`() async throws {
     let url = fixtureURL("multiline.csv")
     let reader = try StreamingCSVReader(url: url)
 
@@ -155,7 +155,7 @@ struct StreamingCSVReaderTests {
   }
 
   @Test
-  func testReadRawEmptyFields() async throws {
+  func `reads empty fields`() async throws {
     let url = fixtureURL("empty_fields.csv")
     let reader = try StreamingCSVReader(url: url)
 
@@ -173,11 +173,11 @@ struct StreamingCSVReaderTests {
   }
 }
 
-@Suite("StreamingCSVWriter Tests")
-struct StreamingCSVWriterTests {
+@Suite
+struct `StreamingCSVWriter tests` {
 
   @Test
-  func testWriteRawSimpleCSV() async throws {
+  func `writes a simple CSV`() async throws {
     let tempURL = FileManager.default.temporaryDirectory
       .appendingPathComponent(UUID().uuidString)
       .appendingPathExtension("csv")
@@ -197,7 +197,7 @@ struct StreamingCSVWriterTests {
   }
 
   @Test
-  func testWriteRawQuotedFields() async throws {
+  func `quotes fields that need quoting`() async throws {
     let tempURL = FileManager.default.temporaryDirectory
       .appendingPathComponent(UUID().uuidString)
       .appendingPathExtension("csv")
@@ -218,7 +218,7 @@ struct StreamingCSVWriterTests {
 
   #if !os(Linux)
     @Test
-    func testDifferentEncodings() async throws {
+    func `round-trips a non-UTF-8 encoding`() async throws {
       let tempURL = FileManager.default.temporaryDirectory
         .appendingPathComponent(UUID().uuidString)
         .appendingPathExtension("csv")
@@ -247,7 +247,7 @@ struct StreamingCSVWriterTests {
   #endif
 
   @Test
-  func testAppendMode() async throws {
+  func `appends to an existing file`() async throws {
     let tempURL = FileManager.default.temporaryDirectory
       .appendingPathComponent(UUID().uuidString)
       .appendingPathExtension("csv")
@@ -268,11 +268,11 @@ struct StreamingCSVWriterTests {
   }
 }
 
-@Suite("Protocol Conformance Tests")
-struct ProtocolConformanceTests {
+@Suite
+struct `Protocol conformance tests` {
 
   @Test
-  func testStringConformance() {
+  func `converts String fields`() {
     let original = "Hello World"
     let csv = original.csvString
     let decoded = String(csvString: csv)
@@ -280,7 +280,7 @@ struct ProtocolConformanceTests {
   }
 
   @Test
-  func testIntConformance() {
+  func `converts Int fields`() {
     let original = 42
     let csv = original.csvString
     let decoded = Int(csvString: csv)
@@ -291,7 +291,7 @@ struct ProtocolConformanceTests {
   }
 
   @Test
-  func testDoubleConformance() {
+  func `converts Double fields`() {
     let original = 3.14159
     let csv = original.csvString
     let decoded = Double(csvString: csv)
@@ -299,7 +299,7 @@ struct ProtocolConformanceTests {
   }
 
   @Test
-  func testBoolConformance() {
+  func `converts Bool fields`() {
     #expect(Bool(csvString: "true") == true)
     #expect(Bool(csvString: "false") == false)
     #expect(Bool(csvString: "yes") == true)
@@ -313,7 +313,7 @@ struct ProtocolConformanceTests {
   }
 
   @Test
-  func testDataConformance() {
+  func `converts Data fields`() {
     let original = Data("Hello World".utf8)
     let csv = original.csvString
     let decoded = Data(csvString: csv)
@@ -321,7 +321,7 @@ struct ProtocolConformanceTests {
   }
 
   @Test
-  func testOptionalConformance() {
+  func `converts optional fields`() {
     let some: Int? = 42
     let none: Int? = nil
 
@@ -334,15 +334,15 @@ struct ProtocolConformanceTests {
   }
 }
 
-@Suite("AsyncSequence Tests", .serialized)
-struct AsyncSequenceTests {
+@Suite(.serialized)
+struct `AsyncSequence tests` {
 
   func fixtureURL(_ name: String) -> URL {
     Bundle.module.url(forResource: "Fixtures/\(name)", withExtension: nil)!
   }
 
   @Test
-  func testAsyncSequenceBasicIteration() async throws {
+  func `iterates rows`() async throws {
     let url = fixtureURL("simple.csv")
     let reader = try StreamingCSVReader(url: url)
 
@@ -359,7 +359,7 @@ struct AsyncSequenceTests {
   }
 
   @Test
-  func testAsyncSequenceEnumerated() async throws {
+  func `enumerates rows`() async throws {
     let url = fixtureURL("simple.csv")
     let reader = try StreamingCSVReader(url: url)
 
@@ -378,7 +378,7 @@ struct AsyncSequenceTests {
   }
 
   @Test
-  func testAsyncSequenceFilter() async throws {
+  func `filters rows`() async throws {
     let url = fixtureURL("simple.csv")
     let reader = try StreamingCSVReader(url: url)
 
@@ -404,7 +404,7 @@ struct AsyncSequenceTests {
   }
 
   @Test
-  func testAsyncSequencePrefix() async throws {
+  func `takes a prefix of rows`() async throws {
     let url = fixtureURL("simple.csv")
     let reader = try StreamingCSVReader(url: url)
 
@@ -422,7 +422,7 @@ struct AsyncSequenceTests {
   }
 
   @Test
-  func testAsyncSequenceDropFirst() async throws {
+  func `drops leading rows`() async throws {
     let url = fixtureURL("simple.csv")
     let reader = try StreamingCSVReader(url: url)
 
@@ -440,7 +440,7 @@ struct AsyncSequenceTests {
   }
 
   @Test
-  func testAsyncSequenceTyped() async throws {
+  func `iterates decoded rows`() async throws {
     // Create a simple Product struct for testing
     struct SimpleProduct: CSVRow, Sendable {
       let id: Int
@@ -480,7 +480,7 @@ struct AsyncSequenceTests {
   }
 
   @Test
-  func testAsyncSequenceTypedWithFilterAndMap() async throws {
+  func `filters and maps decoded rows`() async throws {
     // Create a simple Product struct for testing
     struct SimpleProduct: CSVRow, Sendable {
       let id: Int

@@ -3,11 +3,11 @@ import Testing
 
 @testable import StreamingCSV
 
-@Suite("ByteCSVParser Tests")
-struct ByteCSVParserTests {
+@Suite
+struct `ByteCSVParser tests` {
 
-  @Test("Parse simple unquoted row")
-  func parseSimpleRow() throws {
+  @Test
+  func `parses a simple unquoted row`() throws {
     let parser = ByteCSVParser()
     let csvData = Data("Alice,30,New York\n".utf8)
 
@@ -19,8 +19,8 @@ struct ByteCSVParserTests {
     #expect(consumed == csvData.count)
   }
 
-  @Test("Parse quoted fields with commas")
-  func parseQuotedFields() throws {
+  @Test
+  func `parses quoted fields containing commas`() throws {
     let parser = ByteCSVParser()
     let csvData = Data("\"Smith, John\",30,\"New York, NY\"\n".utf8)
 
@@ -31,8 +31,8 @@ struct ByteCSVParserTests {
     #expect(row.field(at: 2) == "New York, NY")
   }
 
-  @Test("Parse fields with escaped quotes")
-  func parseEscapedQuotes() throws {
+  @Test
+  func `parses fields with escaped quotes`() throws {
     let parser = ByteCSVParser()
     let csvData = Data("\"She said \"\"Hello\"\"\",42,\"Test\"\n".utf8)
 
@@ -43,8 +43,8 @@ struct ByteCSVParserTests {
     #expect(row.field(at: 2) == "Test")
   }
 
-  @Test("Parse empty fields")
-  func parseEmptyFields() throws {
+  @Test
+  func `parses empty fields`() throws {
     let parser = ByteCSVParser()
     let csvData = Data("Alice,,30,,\n".utf8)
 
@@ -57,8 +57,8 @@ struct ByteCSVParserTests {
     #expect(row.field(at: 4)?.isEmpty == true)
   }
 
-  @Test("Parse with different line endings")
-  func parseLineEndings() throws {
+  @Test
+  func `parses LF, CRLF, and CR line endings`() throws {
     let parser = ByteCSVParser()
 
     // Test LF
@@ -80,8 +80,8 @@ struct ByteCSVParserTests {
     #expect(crResult.consumedBytes == 9)  // "Alice,30\r"
   }
 
-  @Test("Parse multiline quoted fields")
-  func parseMultilineFields() throws {
+  @Test
+  func `parses multiline quoted fields`() throws {
     let parser = ByteCSVParser()
     let csvData = Data("\"Line 1\nLine 2\",42,\"Test\"\n".utf8)
 
@@ -92,8 +92,8 @@ struct ByteCSVParserTests {
     #expect(row.field(at: 2) == "Test")
   }
 
-  @Test("Find row boundary")
-  func findRowBoundary() throws {
+  @Test
+  func `finds a row boundary`() throws {
     let parser = ByteCSVParser()
 
     // Simple case
@@ -111,8 +111,8 @@ struct ByteCSVParserTests {
     #expect(boundary3 == simpleData.count)  // After "Bob,25\n"
   }
 
-  @Test("Parse with custom delimiter")
-  func parseCustomDelimiter() throws {
+  @Test
+  func `parses a custom delimiter`() throws {
     let parser = ByteCSVParser(delimiter: ";", quote: "\"", escape: "\"")
     let csvData = Data("Alice;30;New York\n".utf8)
 
@@ -123,8 +123,8 @@ struct ByteCSVParserTests {
     #expect(row.field(at: 2) == "New York")
   }
 
-  @Test("Parse row at end of data without newline")
-  func parseLastRowWithoutNewline() throws {
+  @Test
+  func `parses a final row with no trailing newline`() throws {
     let parser = ByteCSVParser()
     let csvData = Data("Alice,30,New York".utf8)
 
@@ -136,8 +136,8 @@ struct ByteCSVParserTests {
     #expect(consumed == csvData.count)
   }
 
-  @Test("CSVFieldRange extraction")
-  func fieldRangeExtraction() throws {
+  @Test
+  func `extracts field strings through CSVFieldRange`() throws {
     let data = Data("Hello,World".utf8)
 
     let field1 = CSVFieldRange(start: 0, end: 5, isQuoted: false)
@@ -155,8 +155,8 @@ struct ByteCSVParserTests {
     #expect(invalidField.extractString(from: data) == nil)
   }
 
-  @Test("CSVRowBytes convenience methods")
-  func rowBytesConvenience() throws {
+  @Test
+  func `exposes fields through CSVRowBytes`() throws {
     let data = Data("Alice,30,NYC".utf8)
     let fields = [
       CSVFieldRange(start: 0, end: 5, isQuoted: false),
@@ -178,19 +178,19 @@ struct ByteCSVParserTests {
   }
 }
 
-@Suite("CSVByteBuffer Tests")
-struct CSVByteBufferTests {
+@Suite
+struct `CSVByteBuffer tests` {
 
-  @Test("Buffer initialization")
-  func bufferInit() throws {
+  @Test
+  func `initializes an empty buffer`() throws {
     let buffer = CSVByteBuffer(capacity: 1024)
     #expect(buffer.isEmpty)
     #expect(buffer.readableBytes == 0)
     #expect(buffer.capacity >= 1024)
   }
 
-  @Test("Write and read data")
-  func writeAndRead() throws {
+  @Test
+  func `writes and reads data`() throws {
     let buffer = CSVByteBuffer()
     let testData = Data("Hello, World!".utf8)
 
@@ -208,8 +208,8 @@ struct CSVByteBufferTests {
     #expect(buffer.isEmpty)
   }
 
-  @Test("Peek without advancing")
-  func peekData() throws {
+  @Test
+  func `peeks without advancing`() throws {
     let buffer = CSVByteBuffer()
     let testData = Data("Hello".utf8)
 
@@ -224,8 +224,8 @@ struct CSVByteBufferTests {
     #expect(buffer.readableBytes == 2)
   }
 
-  @Test("Skip bytes")
-  func skipBytes() throws {
+  @Test
+  func `skips bytes`() throws {
     let buffer = CSVByteBuffer()
     let testData = Data("Hello, World!".utf8)
 
@@ -239,8 +239,8 @@ struct CSVByteBufferTests {
     #expect(String(data: remaining!, encoding: .utf8) == "World!")
   }
 
-  @Test("Find byte in buffer")
-  func findByte() throws {
+  @Test
+  func `finds a byte in the buffer`() throws {
     let buffer = CSVByteBuffer()
     let testData = Data("Hello, World!".utf8)
 
@@ -260,8 +260,8 @@ struct CSVByteBufferTests {
     #expect(limitedFind == nil)
   }
 
-  @Test("Find byte and read segments")
-  func findByteAndRead() throws {
+  @Test
+  func `finds a byte and reads the segment before it`() throws {
     let buffer = CSVByteBuffer()
     let testData = Data("field1,field2,field3".utf8)
 
@@ -288,8 +288,8 @@ struct CSVByteBufferTests {
     #expect(buffer.isEmpty)
   }
 
-  @Test("Compact buffer")
-  func compactBuffer() throws {
+  @Test
+  func `compacts the buffer`() throws {
     let buffer = CSVByteBuffer(capacity: 100)
     let testData = Data("Hello, World!".utf8)
 
@@ -305,8 +305,8 @@ struct CSVByteBufferTests {
     #expect(String(data: remaining!, encoding: .utf8) == "World!")
   }
 
-  @Test("Clear buffer")
-  func clearBuffer() throws {
+  @Test
+  func `clears the buffer`() throws {
     let buffer = CSVByteBuffer()
     let testData = Data("Hello, World!".utf8)
 
@@ -318,8 +318,8 @@ struct CSVByteBufferTests {
     #expect(buffer.readableBytes == 0)
   }
 
-  @Test("Buffer expansion on write")
-  func bufferExpansion() throws {
+  @Test
+  func `expands the buffer on write`() throws {
     let buffer = CSVByteBuffer(capacity: 10)
     let largeData = Data(String(repeating: "A", count: 100).utf8)
 
@@ -330,18 +330,18 @@ struct CSVByteBufferTests {
   }
 }
 
-@Suite("AdaptiveBufferStrategy Tests")
-struct AdaptiveBufferStrategyTests {
+@Suite
+struct `AdaptiveBufferStrategy tests` {
 
-  @Test("Initial buffer size")
-  func initialSize() async throws {
+  @Test
+  func `starts at the initial buffer size`() async throws {
     let strategy = AdaptiveBufferStrategy(initialSize: .medium)
     let size = await strategy.bufferSize
     #expect(size == AdaptiveBufferStrategy.BufferSize.medium.rawValue)
   }
 
-  @Test("Buffer grows for large rows")
-  func bufferGrows() async throws {
+  @Test
+  func `grows the buffer for large rows`() async throws {
     let strategy = AdaptiveBufferStrategy(initialSize: .small)
 
     // Record consistently large rows (more than half the buffer size)
@@ -354,8 +354,8 @@ struct AdaptiveBufferStrategyTests {
     #expect(finalSize > AdaptiveBufferStrategy.BufferSize.small.rawValue)
   }
 
-  @Test("Buffer shrinks for small rows")
-  func bufferShrinks() async throws {
+  @Test
+  func `shrinks the buffer for small rows`() async throws {
     let strategy = AdaptiveBufferStrategy(initialSize: .large)
 
     // Need enough rows to trigger decisions
@@ -367,8 +367,8 @@ struct AdaptiveBufferStrategyTests {
     #expect(finalSize < AdaptiveBufferStrategy.BufferSize.large.rawValue)
   }
 
-  @Test("Handle oversized row")
-  func handleOversized() async throws {
+  @Test
+  func `handles an oversized row`() async throws {
     let strategy = AdaptiveBufferStrategy(initialSize: .small)
 
     let hugeRowSize = 500000
@@ -379,8 +379,8 @@ struct AdaptiveBufferStrategyTests {
     #expect(currentSize >= AdaptiveBufferStrategy.BufferSize.huge.rawValue)
   }
 
-  @Test("Statistics tracking")
-  func statistics() async throws {
+  @Test
+  func `tracks read statistics`() async throws {
     let strategy = AdaptiveBufferStrategy()
 
     _ = await strategy.recordRow(size: 100)
@@ -392,8 +392,8 @@ struct AdaptiveBufferStrategyTests {
     #expect(stats.averageRowSize == 200)
   }
 
-  @Test("Reset strategy")
-  func resetStrategy() async throws {
+  @Test
+  func `resets to the initial state`() async throws {
     let strategy = AdaptiveBufferStrategy(initialSize: .medium)
 
     for _ in 0..<20 {
@@ -407,8 +407,8 @@ struct AdaptiveBufferStrategyTests {
     #expect(stats.currentBufferSize == AdaptiveBufferStrategy.BufferSize.tiny.rawValue)
   }
 
-  @Test("Buffer size recommendations")
-  func sizeRecommendations() throws {
+  @Test
+  func `recommends a buffer size for a file size`() throws {
     #expect(AdaptiveBufferStrategy.BufferSize.recommended(for: 25) == .tiny)
     #expect(AdaptiveBufferStrategy.BufferSize.recommended(for: 75) == .small)
     #expect(AdaptiveBufferStrategy.BufferSize.recommended(for: 500) == .medium)
@@ -417,11 +417,11 @@ struct AdaptiveBufferStrategyTests {
   }
 }
 
-@Suite("CSVCharacteristics Tests")
-struct CSVCharacteristicsTests {
+@Suite
+struct `CSVCharacteristics tests` {
 
-  @Test("Detect simple CSV characteristics")
-  func detectSimpleCSV() throws {
+  @Test
+  func `detects the shape of a simple CSV`() throws {
     var characteristics = CSVCharacteristics()
 
     // Simulate observing simple rows
@@ -442,8 +442,8 @@ struct CSVCharacteristicsTests {
     #expect(characteristics.columnCount == 3)
   }
 
-  @Test("Detect quoted fields")
-  func detectQuotedFields() throws {
+  @Test
+  func `detects quoted fields`() throws {
     var characteristics = CSVCharacteristics()
 
     let quotedRow = CSVRowBytes(
@@ -460,8 +460,8 @@ struct CSVCharacteristicsTests {
     #expect(characteristics.hasQuotes == true)
   }
 
-  @Test("Detect variable column counts")
-  func detectVariableColumns() throws {
+  @Test
+  func `detects variable column counts`() throws {
     var characteristics = CSVCharacteristics()
 
     // Rows with different column counts

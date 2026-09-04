@@ -3,11 +3,11 @@ import Testing
 
 @testable import StreamingCSV
 
-@Suite("MemoryMappedFileDataSource Tests")
-struct MemoryMappedFileDataSourceTests {
+@Suite
+struct `MemoryMappedFileDataSource tests` {
 
-  @Test("Initialize with valid file")
-  func initWithValidFile() async throws {
+  @Test
+  func `initializes from a readable file`() async throws {
     let content = "Name,Age,City\nAlice,30,NYC\nBob,25,LA\n"
     let url = try createTempFile(content: content)
     defer { try? FileManager.default.removeItem(at: url) }
@@ -18,8 +18,8 @@ struct MemoryMappedFileDataSourceTests {
     #expect(totalSize == content.utf8.count)
   }
 
-  @Test("Read data chunks")
-  func readChunks() async throws {
+  @Test
+  func `reads data in chunks`() async throws {
     let content = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     let url = try createTempFile(content: content)
     defer { try? FileManager.default.removeItem(at: url) }
@@ -46,8 +46,8 @@ struct MemoryMappedFileDataSourceTests {
     #expect(moreData == nil)
   }
 
-  @Test("Read at specific offset")
-  func readAtOffset() async throws {
+  @Test
+  func `reads at a specific offset`() async throws {
     let content = "0123456789ABCDEFGHIJ"
     let url = try createTempFile(content: content)
     defer { try? FileManager.default.removeItem(at: url) }
@@ -65,8 +65,8 @@ struct MemoryMappedFileDataSourceTests {
     #expect(String(data: data2, encoding: .utf8) == "FGHIJ")
   }
 
-  @Test("Handle empty file")
-  func handleEmptyFile() async throws {
+  @Test
+  func `handles an empty file`() async throws {
     let url = try createTempFile(content: "")
     defer { try? FileManager.default.removeItem(at: url) }
 
@@ -82,8 +82,8 @@ struct MemoryMappedFileDataSourceTests {
     #expect(data.isEmpty)
   }
 
-  @Test("Large file handling")
-  func largeFile() async throws {
+  @Test
+  func `handles a large file`() async throws {
     // Create a file larger than typical page size (4KB)
     let chunk = String(repeating: "X", count: 1024)
     let content = String(repeating: chunk, count: 10)  // 10KB
@@ -104,8 +104,8 @@ struct MemoryMappedFileDataSourceTests {
     #expect(totalRead == 10240)
   }
 
-  @Test("Reset position")
-  func resetPosition() async throws {
+  @Test
+  func `resets the read position`() async throws {
     let content = "ABCDEFGHIJ"
     let url = try createTempFile(content: content)
     defer { try? FileManager.default.removeItem(at: url) }
@@ -125,8 +125,8 @@ struct MemoryMappedFileDataSourceTests {
     #expect(String(data: chunk2, encoding: .utf8) == "ABCDE")
   }
 
-  @Test("Concurrent reads")
-  func concurrentReads() async throws {
+  @Test
+  func `serves concurrent reads`() async throws {
     let content = String(repeating: "ABCDEFGHIJ", count: 100)  // 1KB
     let url = try createTempFile(content: content)
     defer { try? FileManager.default.removeItem(at: url) }
@@ -148,8 +148,8 @@ struct MemoryMappedFileDataSourceTests {
     #expect(String(data: results.0, encoding: .utf8)?.starts(with: "ABCDE") == true)
   }
 
-  @Test("Read beyond file bounds")
-  func readBeyondBounds() async throws {
+  @Test
+  func `returns no data past the end of the file`() async throws {
     let content = "SHORT"
     let url = try createTempFile(content: content)
     defer { try? FileManager.default.removeItem(at: url) }
@@ -166,8 +166,8 @@ struct MemoryMappedFileDataSourceTests {
     #expect(data2.isEmpty)
   }
 
-  @Test("File with UTF-8 content")
-  func utf8Content() async throws {
+  @Test
+  func `reads multi-byte UTF-8 content`() async throws {
     let content = "Hello 世界 🌍 Émoji"
     let url = try createTempFile(content: content)
     defer { try? FileManager.default.removeItem(at: url) }
@@ -179,8 +179,8 @@ struct MemoryMappedFileDataSourceTests {
     #expect(readContent == content)
   }
 
-  @Test("Performance with repeated small reads")
-  func repeatedSmallReads() async throws {
+  @Test
+  func `handles many small sequential reads`() async throws {
     let content = String(repeating: "A", count: 10000)
     let url = try createTempFile(content: content)
     defer { try? FileManager.default.removeItem(at: url) }
@@ -195,8 +195,8 @@ struct MemoryMappedFileDataSourceTests {
     #expect(totalRead == 10000)
   }
 
-  @Test("Validate memory mapping efficiency")
-  func memoryMappingEfficiency() async throws {
+  @Test
+  func `slices at arbitrary offsets`() async throws {
     // Create a moderately large file
     let content = String(repeating: "X", count: 100_000)  // 100KB
     let url = try createTempFile(content: content)
@@ -222,11 +222,11 @@ struct MemoryMappedFileDataSourceTests {
   }
 }
 
-@Suite("MemoryMappedFileDataSource Edge Cases")
-struct MemoryMappedFileDataSourceEdgeCases {
+@Suite
+struct `MemoryMappedFileDataSource edge cases` {
 
-  @Test("Handle non-existent file")
-  func nonExistentFile() throws {
+  @Test
+  func `throws for a file that does not exist`() throws {
     let url = URL(fileURLWithPath: "/tmp/non_existent_file_\(UUID().uuidString).csv")
 
     #expect(throws: (any Error).self) {
@@ -234,8 +234,8 @@ struct MemoryMappedFileDataSourceEdgeCases {
     }
   }
 
-  @Test("Handle directory instead of file")
-  func directoryInsteadOfFile() throws {
+  @Test
+  func `throws for a directory`() throws {
     let tempDir = FileManager.default.temporaryDirectory
       .appendingPathComponent("test_dir_\(UUID().uuidString)")
     try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
@@ -246,8 +246,8 @@ struct MemoryMappedFileDataSourceEdgeCases {
     }
   }
 
-  @Test("Handle file with special permissions")
-  func specialPermissions() async throws {
+  @Test
+  func `handles a file with restrictive permissions`() async throws {
     let content = "test content"
     let url = try createTempFile(content: content)
     defer { try? FileManager.default.removeItem(at: url) }

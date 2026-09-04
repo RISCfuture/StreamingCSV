@@ -8,15 +8,15 @@ import Testing
 /// This test suite verifies that StreamingCSV correctly handles CSV rows
 /// that span buffer boundaries. Previously, the ByteCSVParser would incorrectly
 /// return incomplete rows when data ended at a buffer boundary, causing data loss.
-@Suite("Buffer Boundary Handling")
-struct BufferBoundaryTests {
+@Suite
+struct `Buffer boundary handling` {
 
   /// Test that rows spanning buffer boundaries are parsed correctly
   ///
   /// This test creates a CSV where a row spans exactly across the typical 64KB buffer boundary.
   /// The bug would cause the parser to return an incomplete row with fewer fields than expected.
-  @Test("Parse row spanning buffer boundary")
-  func parseRowSpanningBufferBoundary() async throws {
+  @Test
+  func `parses a row spanning a buffer boundary`() async throws {
     // Create a CSV with a row that will span the buffer boundary
     // First, create enough data to reach near the buffer size
     let padding = String(repeating: "x", count: 65530)
@@ -49,8 +49,8 @@ struct BufferBoundaryTests {
   ///
   /// The core of the fix was ensuring ByteCSVParser returns nil for incomplete rows
   /// when not at the actual end of file, allowing the reader to fetch more data.
-  @Test("ByteCSVParser returns nil for incomplete rows")
-  func byteParserHandlesIncompleteData() throws {
+  @Test
+  func `returns nil for an incomplete row`() throws {
     let csvData = Data("field1,field2,field3\nvalue1,value2,value3\n".utf8)
     let parser = ByteCSVParser()
 
@@ -79,8 +79,8 @@ struct BufferBoundaryTests {
   }
 
   /// Test with multiple buffer sizes to ensure the fix works consistently
-  @Test("Parse with various buffer sizes", arguments: [1024, 4096, 32768, 65536, 131072])
-  func parseWithVariousBufferSizes(bufferSize: Int) async throws {
+  @Test(arguments: [1024, 4096, 32768, 65536, 131072])
+  func `parses with various buffer sizes`(bufferSize: Int) async throws {
     // Create test data with a long row
     let longField = String(repeating: "data", count: 20000)
     let csvContent = """
@@ -116,8 +116,8 @@ struct BufferBoundaryTests {
   ///
   /// Quoted fields are particularly tricky as the parser needs to track
   /// quote state across buffer boundaries.
-  @Test("Quoted field at buffer boundary")
-  func quotedFieldAtBufferBoundary() async throws {
+  @Test
+  func `parses a quoted field spanning a buffer boundary`() async throws {
     // Create a quoted field that will span the buffer boundary
     let longQuotedValue = String(repeating: "x", count: 65520)
     let csvContent = """
@@ -146,8 +146,8 @@ struct BufferBoundaryTests {
   /// started at byte 65,056, right at the default 65,536-byte buffer boundary.
   /// The ByteCSVParser would incorrectly return an incomplete row with 78 fields
   /// instead of the expected 90 fields.
-  @Test("Row at exact buffer boundary")
-  func rowAtExactBufferBoundary() async throws {
+  @Test
+  func `parses a row ending exactly at a buffer boundary`() async throws {
     // Create data that puts a row exactly at the buffer boundary
     // Fill most of the buffer with a long field
     let bufferSize = 65536

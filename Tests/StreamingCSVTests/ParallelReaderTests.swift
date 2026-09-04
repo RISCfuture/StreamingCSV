@@ -16,11 +16,11 @@ actor ProcessedRowsCounter {
   }
 }
 
-@Suite("ParallelCSVReader Tests")
-struct ParallelCSVReaderTests {
+@Suite
+struct `ParallelCSVReader tests` {
 
-  @Test("Process CSV with multiple workers")
-  func parallelProcessing() async throws {
+  @Test
+  func `reads a CSV across multiple workers`() async throws {
     let csvContent = """
       Name,Age,Department
       Alice,30,Engineering
@@ -48,8 +48,8 @@ struct ParallelCSVReaderTests {
     #expect(names.contains("Henry"))
   }
 
-  @Test("Handle small files with single worker")
-  func smallFileSingleWorker() async throws {
+  @Test
+  func `reads a small file with a single worker`() async throws {
     let csvContent = """
       A,B,C
       1,2,3
@@ -69,8 +69,8 @@ struct ParallelCSVReaderTests {
     #expect(result.rows[2] == ["4", "5", "6"])
   }
 
-  @Test("Process CSV with quotes and special characters")
-  func handleComplexCSV() async throws {
+  @Test
+  func `reads quotes and special characters`() async throws {
     let csvContent = """
       Name,Description,Price
       "Product A","Contains, comma",99.99
@@ -92,8 +92,8 @@ struct ParallelCSVReaderTests {
     }
   }
 
-  @Test("Automatic worker count selection")
-  func automaticWorkerCount() async throws {
+  @Test
+  func `chooses a worker count automatically`() async throws {
     let csvContent = "A,B,C\n1,2,3\n"
     let url = try createTempCSVFile(content: csvContent)
     defer { try? FileManager.default.removeItem(at: url) }
@@ -105,8 +105,8 @@ struct ParallelCSVReaderTests {
     #expect(result.totalRows == 2)
   }
 
-  @Test("Custom delimiter support")
-  func customDelimiter() async throws {
+  @Test
+  func `reads a custom delimiter`() async throws {
     let csvContent = "A;B;C\n1;2;3\n4;5;6\n"
     let url = try createTempCSVFile(content: csvContent)
     defer { try? FileManager.default.removeItem(at: url) }
@@ -124,8 +124,8 @@ struct ParallelCSVReaderTests {
     #expect(result.rows[1] == ["1", "2", "3"])
   }
 
-  @Test("Large file simulation")
-  func largeFileProcessing() async throws {
+  @Test
+  func `reads a large file`() async throws {
     // Generate a larger CSV file
     var csvContent = "ID,Name,Value,Status,Timestamp\n"
     for i in 1...1000 {
@@ -153,8 +153,8 @@ struct ParallelCSVReaderTests {
     #expect(totalValue > 0)
   }
 
-  @Test("Empty file handling")
-  func emptyFile() async throws {
+  @Test
+  func `yields no rows for an empty file`() async throws {
     let url = try createTempCSVFile(content: "")
     defer { try? FileManager.default.removeItem(at: url) }
 
@@ -164,8 +164,8 @@ struct ParallelCSVReaderTests {
     #expect(result.totalRows == 0)
   }
 
-  @Test("Single column CSV")
-  func singleColumn() async throws {
+  @Test
+  func `reads a single-column CSV`() async throws {
     let csvContent = """
       Name
       Alice
@@ -184,8 +184,8 @@ struct ParallelCSVReaderTests {
     #expect(names == ["Alice", "Bob", "Charlie"])
   }
 
-  @Test("CSV with empty fields")
-  func emptyFields() async throws {
+  @Test
+  func `reads empty fields`() async throws {
     let csvContent = """
       A,B,C,D
       1,,3,
@@ -208,8 +208,8 @@ struct ParallelCSVReaderTests {
     #expect(result.rows[4] == ["5", "6", "7", "8"])
   }
 
-  @Test("Process with row handler")
-  func processWithHandler() async throws {
+  @Test
+  func `delivers rows to a row handler`() async throws {
     let csvContent = (1...100).map { "Row\($0),Value\($0)" }.joined(separator: "\n")
     let url = try createTempCSVFile(content: csvContent)
     defer { try? FileManager.default.removeItem(at: url) }
@@ -239,11 +239,11 @@ struct ParallelCSVReaderTests {
   }
 }
 
-@Suite("ParallelCSVReader Performance Tests")
-struct ParallelCSVReaderPerformanceTests {
+@Suite
+struct `ParallelCSVReader performance tests` {
 
-  @Test("Compare parallel vs sequential processing")
-  func comparePerformance() async throws {
+  @Test
+  func `agrees with sequential reading`() async throws {
     // Generate a medium-sized CSV
     var csvContent = "ID,Name,Value,Category,Status\n"
     for i in 1...5000 {
@@ -270,8 +270,8 @@ struct ParallelCSVReaderPerformanceTests {
     #expect(results[4] == 5001)
   }
 
-  @Test("Memory efficiency with large files")
-  func memoryEfficiency() async throws {
+  @Test
+  func `reads a large file row by row`() async throws {
     // Create a file with many rows but moderate total size
     var csvContent = "A,B,C\n"
     for i in 1...10000 {
