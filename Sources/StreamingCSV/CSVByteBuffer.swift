@@ -36,13 +36,8 @@ final class CSVByteBuffer {
       buffer.reserveCapacity(requiredCapacity * 2)
     }
 
-    data.withUnsafeBytes { bytes in
-      let ptr = bytes.bindMemory(to: UInt8.self)
-      for i in 0..<bytesToWrite {
-        buffer.append(ptr[i])
-        writeIndex += 1
-      }
-    }
+    buffer.append(contentsOf: data)
+    writeIndex += bytesToWrite
     return bytesToWrite
   }
 
