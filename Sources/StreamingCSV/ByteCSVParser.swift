@@ -241,177 +241,172 @@ public struct ByteCSVParser: Sendable {
     var afterQuote = false
     let dataCount = data.count
 
-    // Use withUnsafeBytes for direct memory access
-    return data.withUnsafeBytes { bytes in
-      let ptr = bytes.bindMemory(to: UInt8.self)
+    let bytes = data.bytes
 
-      while pos < dataCount {
-        let byte = ptr[pos]
+    while pos < dataCount {
+      let byte = bytes[pos]
 
-        if afterQuote {
-          // After closing quote, expecting delimiter or line ending
-          if byte == delimiter {
-            // End of quoted field
-            fields.append(
-              CSVFieldRange(
-                start: fieldStart,
-                end: pos - 1,  // Exclude the closing quote
-                isQuoted: true
-              )
-            )
-            pos += 1
-            fieldStart = pos
-            afterQuote = false
-            continue
-          }
-          if byte == Self.lf || byte == Self.cr {
-            // End of row after quoted field
-            fields.append(
-              CSVFieldRange(
-                start: fieldStart,
-                end: pos - 1,  // Exclude the closing quote
-                isQuoted: true
-              )
-            )
-
-            // Handle line endings
-            pos += 1
-            if byte == Self.cr && pos < dataCount && ptr[pos] == Self.lf {
-              pos += 1  // Skip LF in CRLF
-            }
-
-            return (CSVRowBytes(data: data, fields: fields, encoding: encoding), pos)
-          }
-          if byte == quote {
-            // Double quote - continue in quoted mode
-            afterQuote = false
-            inQuotes = true
-            pos += 1
-            continue
-          }
-          // Invalid - treat as part of unquoted field
-          afterQuote = false
-          inQuotes = false
-        }
-
-        if inQuotes {
-          // Inside quoted field
-          if byte == escape && pos + 1 < dataCount && ptr[pos + 1] == quote {
-            // Escaped quote - skip escape but keep the quote
-            pos += 2
-            continue
-          }
-          if byte == quote {
-            // End of quoted field
-            inQuotes = false
-            afterQuote = true
-            pos += 1
-            continue
-          }
-          // Regular character in quoted field
-          pos += 1
-          continue
-        }
-        // Not in quotes
-        if byte == quote && pos == fieldStart {
-          // Start of quoted field
-          inQuotes = true
-          fieldStart = pos + 1  // Skip opening quote
-          pos += 1
-          continue
-        }
+      if afterQuote {
+        // After closing quote, expecting delimiter or line ending
         if byte == delimiter {
-          // End of unquoted field
+          // End of quoted field
           fields.append(
             CSVFieldRange(
               start: fieldStart,
-              end: pos,
-              isQuoted: false
+              end: pos - 1,  // Exclude the closing quote
+              isQuoted: true
             )
           )
           pos += 1
           fieldStart = pos
+          afterQuote = false
           continue
         }
         if byte == Self.lf || byte == Self.cr {
-          // End of row
+          // End of row after quoted field
           fields.append(
             CSVFieldRange(
               start: fieldStart,
-              end: pos,
-              isQuoted: false
+              end: pos - 1,  // Exclude the closing quote
+              isQuoted: true
             )
           )
 
           // Handle line endings
           pos += 1
-          if byte == Self.cr && pos < dataCount && ptr[pos] == Self.lf {
+          if byte == Self.cr && pos < dataCount && bytes[pos] == Self.lf {
             pos += 1  // Skip LF in CRLF
           }
 
           return (CSVRowBytes(data: data, fields: fields, encoding: encoding), pos)
         }
-        // Regular character
+        if byte == quote {
+          // Double quote - continue in quoted mode
+          afterQuote = false
+          inQuotes = true
+          pos += 1
+          continue
+        }
+        // Invalid - treat as part of unquoted field
+        afterQuote = false
+        inQuotes = false
+      }
+
+      if inQuotes {
+        // Inside quoted field
+        if byte == escape && pos + 1 < dataCount && bytes[pos + 1] == quote {
+          // Escaped quote - skip escape but keep the quote
+          pos += 2
+          continue
+        }
+        if byte == quote {
+          // End of quoted field
+          inQuotes = false
+          afterQuote = true
+          pos += 1
+          continue
+        }
+        // Regular character in quoted field
         pos += 1
         continue
       }
-
-      // Handle end of data
-      // Only return a row if:
-      // 1. We're at the actual end of file (isEndOfFile == true), OR
-      // 2. We have an empty data (no fields started)
-      // Otherwise, this is an incomplete row and we need more data
-      if isEndOfFile && !inQuotes && (fieldStart < dataCount || !fields.isEmpty) {
-        // Add final field
-        let end = afterQuote ? pos - 1 : pos
+      // Not in quotes
+      if byte == quote && pos == fieldStart {
+        // Start of quoted field
+        inQuotes = true
+        fieldStart = pos + 1  // Skip opening quote
+        pos += 1
+        continue
+      }
+      if byte == delimiter {
+        // End of unquoted field
         fields.append(
           CSVFieldRange(
             start: fieldStart,
-            end: end,
-            isQuoted: afterQuote
+            end: pos,
+            isQuoted: false
           )
         )
+        pos += 1
+        fieldStart = pos
+        continue
+      }
+      if byte == Self.lf || byte == Self.cr {
+        // End of row
+        fields.append(
+          CSVFieldRange(
+            start: fieldStart,
+            end: pos,
+            isQuoted: false
+          )
+        )
+
+        // Handle line endings
+        pos += 1
+        if byte == Self.cr && pos < dataCount && bytes[pos] == Self.lf {
+          pos += 1  // Skip LF in CRLF
+        }
+
         return (CSVRowBytes(data: data, fields: fields, encoding: encoding), pos)
       }
-
-      // Incomplete row or end of buffer - return nil so caller knows to get more data
-      return nil
+      // Regular character
+      pos += 1
+      continue
     }
+
+    // Handle end of data
+    // Only return a row if:
+    // 1. We're at the actual end of file (isEndOfFile == true), OR
+    // 2. We have an empty data (no fields started)
+    // Otherwise, this is an incomplete row and we need more data
+    if isEndOfFile && !inQuotes && (fieldStart < dataCount || !fields.isEmpty) {
+      // Add final field
+      let end = afterQuote ? pos - 1 : pos
+      fields.append(
+        CSVFieldRange(
+          start: fieldStart,
+          end: end,
+          isQuoted: afterQuote
+        )
+      )
+      return (CSVRowBytes(data: data, fields: fields, encoding: encoding), pos)
+    }
+
+    // Incomplete row or end of buffer - return nil so caller knows to get more data
+    return nil
   }
 
   func findRowBoundary(in data: Data, startingAt offset: Int = 0) -> Int? {
     guard offset < data.count else { return nil }
 
-    return data.withUnsafeBytes { bytes in
-      let ptr = bytes.bindMemory(to: UInt8.self)
-      var pos = offset
-      var inQuotes = false
+    let bytes = data.bytes
+    var pos = offset
+    var inQuotes = false
 
-      // Scan forward to find a line ending outside of quotes
-      while pos < data.count {
-        let byte = ptr[pos]
+    // Scan forward to find a line ending outside of quotes
+    while pos < data.count {
+      let byte = bytes[pos]
 
-        if byte == quote {
-          // Check if it's an escaped quote
-          if inQuotes && pos + 1 < data.count && ptr[pos + 1] == quote {
-            pos += 2  // Skip escaped quote
-            continue
-          }
-          inQuotes.toggle()
-        } else if !inQuotes && (byte == Self.lf || byte == Self.cr) {
-          // Found line ending outside quotes
-          pos += 1
-          if byte == Self.cr && pos < data.count && ptr[pos] == Self.lf {
-            pos += 1  // Skip LF in CRLF
-          }
-          return pos
+      if byte == quote {
+        // Check if it's an escaped quote
+        if inQuotes && pos + 1 < data.count && bytes[pos + 1] == quote {
+          pos += 2  // Skip escaped quote
+          continue
         }
-
+        inQuotes.toggle()
+      } else if !inQuotes && (byte == Self.lf || byte == Self.cr) {
+        // Found line ending outside quotes
         pos += 1
+        if byte == Self.cr && pos < data.count && bytes[pos] == Self.lf {
+          pos += 1  // Skip LF in CRLF
+        }
+        return pos
       }
 
-      // If we're not in quotes at the end, the entire data is valid
-      return inQuotes ? nil : data.count
+      pos += 1
     }
+
+    // If we're not in quotes at the end, the entire data is valid
+    return inQuotes ? nil : data.count
   }
 }

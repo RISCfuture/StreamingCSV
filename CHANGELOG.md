@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **BREAKING:** The manifest declares `swift-tools-version: 6.4`. `RawSpan` is
+  available from macOS 13, but its subscript is not — on Swift 6.3
+  `bytes[pos]` fails with "value of type 'RawSpan' has no subscripts" — so the
+  byte parser needs the 6.4 compiler rather than only a newer OS. A
+  dependency's tools version gates the whole package graph, so this reaches
+  consumers of anything depending on StreamingCSV, not only direct ones. The
+  6.3 CI legs are dropped; they could never have built this code.
+- `ByteCSVParser.parseRow` and `findRowBoundary` read bytes through `Data.bytes`
+  and its bounds-checked `RawSpan` subscript instead of `withUnsafeBytes` plus
+  `bindMemory`, dropping both the unsafe pointer and the trailing closure. Each
+  scan keeps the span local to the function body — `CSVFieldRange` stores plain
+  `Int` offsets and `findRowBoundary` returns an `Int?` — so no lifetime
+  annotation is needed.
 - `CSVByteBuffer.write` appends in one `append(contentsOf:)` rather than a
   per-byte loop.
 
