@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2026-09-14
+
+### Changed
+
+- Raise the minimum dependency versions to swift-syntax 603.0.2,
+  swift-macro-toolkit 0.9.0, and swift-docc-plugin 1.5.0.
+- Build the package in Swift language mode 5 as well as mode 6, so consumers
+  on either mode can depend on it. `swift-tools-version` stays at 6.3.
+
+### Internal
+
+- Adopt the `ImmutableWeakCaptures`, `MemberImportVisibility`,
+  `ExistentialAny`, and `InternalImportsByDefault` upcoming-feature flags
+  across every target, alongside the approachable-concurrency flags already
+  in place. The fallout was limited to import-visibility annotations and
+  explicit `any` spellings; no public API changed.
+
 ## [2.1.0] - 2026-06-26
 
 ### Changed
