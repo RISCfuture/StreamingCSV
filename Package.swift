@@ -10,7 +10,8 @@ let upcomingFeatures: [SwiftSetting] = [
   .enableUpcomingFeature("ImmutableWeakCaptures"),
   .enableUpcomingFeature("MemberImportVisibility"),
   .enableUpcomingFeature("ExistentialAny"),
-  .enableUpcomingFeature("InternalImportsByDefault")
+  .enableUpcomingFeature("InternalImportsByDefault"),
+  .strictMemorySafety()
 ]
 
 let package = Package(

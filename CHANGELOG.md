@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CSVByteBuffer.write` appends in one `append(contentsOf:)` rather than a
   per-byte loop.
 
+### Security
+
+- Strict memory safety (SE-0458) is enabled across every target. The one
+  unaudited site was the ASCII sampling probe in `AdaptiveBufferStrategy`,
+  whose raw-buffer access is now marked with the `unsafe` expression marker.
+
 ## [2.1.2] - 2026-09-16
 
 ### Fixed

@@ -207,9 +207,9 @@ struct CSVCharacteristics: Sendable {
 
     // Check for ASCII-only content (sampling)
     if isASCIIOnly && rowCount.isMultiple(of: 10) {  // Sample every 10th row
-      rowBytes.data.withUnsafeBytes { bytes in
-        let ptr = bytes.bindMemory(to: UInt8.self)
-        for i in 0..<bytes.count where ptr[i] > 127 {
+      unsafe rowBytes.data.withUnsafeBytes { bytes in
+        let ptr = unsafe bytes.bindMemory(to: UInt8.self)
+        for i in 0..<bytes.count where unsafe ptr[i] > 127 {
           isASCIIOnly = false
           break
         }
