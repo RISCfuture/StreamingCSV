@@ -2,6 +2,10 @@ public import Foundation
 
 /// A parallel CSV reader for processing large files using multiple cores
 public actor ParallelCSVReader {
+  /// How much of the file is read at a time when scanning for the row boundary
+  /// a chunk should start on.
+  private static let boundarySearchWindow = 64 * 1024
+
   private let fileURL: URL
   private let parser: ByteCSVParser
   private let encoding: String.Encoding
@@ -37,33 +41,16 @@ public actor ParallelCSVReader {
       return try await readSequentially(dataSource: dataSource, startTime: startTime)
     }
 
-    // Divide file into chunks
-    let fileSize = await dataSource.fileSize
-    let chunkSize = fileSize / parallelism
-    var chunks: [(start: Int, end: Int)] = []
-
-    for i in 0..<parallelism {
-      let start = i * chunkSize
-      let end = (i == parallelism - 1) ? fileSize : (i + 1) * chunkSize
-
-      // Adjust chunk boundaries to align with row boundaries
-      if i > 0 {
-        // Find the previous row boundary for clean split
-        let adjustedStart = try await findRowBoundary(
-          dataSource: dataSource,
-          nearOffset: start
-        )
-        chunks.append((start: adjustedStart, end: end))
-      } else {
-        chunks.append((start: start, end: end))
-      }
-    }
+    let chunks = await chunkRanges(in: dataSource)
 
     // Process chunks in parallel
     let results = try await withThrowingTaskGroup(of: [[String]].self) { group in
       for chunk in chunks {
         group.addTask { [parser, encoding] in
-          let chunkData = await dataSource.createSlice(from: chunk.start, to: chunk.end)
+          let chunkData = await dataSource.createSlice(
+            from: chunk.lowerBound,
+            to: chunk.upperBound
+          )
           return await self.parseChunk(data: chunkData, parser: parser, encoding: encoding)
         }
       }
@@ -95,32 +82,20 @@ public actor ParallelCSVReader {
       return
     }
 
-    // Divide file into chunks
-    let fileSize = await dataSource.fileSize
-    let chunkSize = fileSize / parallelism
+    let chunks = await chunkRanges(in: dataSource)
 
     // Create an actor to handle ordered processing
     let accumulator = RowAccumulator(handler: handler)
 
     try await withThrowingTaskGroup(of: (index: Int, rows: [[String]]).self) { group in
-      for i in 0..<parallelism {
-        let start = i * chunkSize
-        let end = (i == parallelism - 1) ? fileSize : (i + 1) * chunkSize
-
+      for (index, chunk) in chunks.enumerated() {
         group.addTask { [parser, encoding] in
-          let adjustedStart: Int
-          if i > 0 {
-            adjustedStart = try await self.findRowBoundary(
-              dataSource: dataSource,
-              nearOffset: start
-            )
-          } else {
-            adjustedStart = start
-          }
-
-          let chunkData = await dataSource.createSlice(from: adjustedStart, to: end)
+          let chunkData = await dataSource.createSlice(
+            from: chunk.lowerBound,
+            to: chunk.upperBound
+          )
           let rows = await self.parseChunk(data: chunkData, parser: parser, encoding: encoding)
-          return (index: i, rows: rows)
+          return (index: index, rows: rows)
         }
       }
 
@@ -174,24 +149,47 @@ public actor ParallelCSVReader {
     return rows
   }
 
-  private func findRowBoundary(dataSource: MemoryMappedFileDataSource, nearOffset: Int) async throws
+  /// The byte ranges the workers parse, in file order.
+  ///
+  /// Every cut falls on the start of a row, and one chunk ends exactly where the
+  /// next begins, so each row is parsed once by exactly one worker. Cutting at
+  /// the raw offsets instead would hand the row straddling a cut to two workers:
+  /// once truncated, once whole.
+  private func chunkRanges(in dataSource: MemoryMappedFileDataSource) async -> [Range<Int>] {
+    let fileSize = await dataSource.fileSize
+    let chunkSize = fileSize / parallelism
+
+    var boundaries = [0]
+    for i in 1..<parallelism {
+      let boundary = await rowStart(atOrAfter: i * chunkSize, in: dataSource)
+      // A row longer than a chunk can carry one boundary past the next, which
+      // would leave the chunks between them empty and out of order.
+      guard let previous = boundaries.last, boundary > previous else { continue }
+      boundaries.append(boundary)
+    }
+    if let previous = boundaries.last, fileSize > previous { boundaries.append(fileSize) }
+
+    return zip(boundaries, boundaries.dropFirst()).map { $0..<$1 }
+  }
+
+  /// The offset of the first row beginning at or after `offset`, or the end of
+  /// the file when no row does.
+  private func rowStart(atOrAfter offset: Int, in dataSource: MemoryMappedFileDataSource) async
     -> Int
   {
-    // Read a small chunk around the offset to find a row boundary
-    let searchWindow = 1024  // Look within 1KB
-    let searchStart = max(0, nearOffset - searchWindow / 2)
-    let searchData = await dataSource.createSlice(
-      from: searchStart,
-      to: min(await dataSource.fileSize, nearOffset + searchWindow / 2)
-    )
+    let fileSize = await dataSource.fileSize
+    var searchStart = offset
 
-    // Find the next row boundary
-    if let boundary = parser.findRowBoundary(in: searchData, startingAt: 0) {
-      return searchStart + boundary
+    while searchStart < fileSize {
+      let searchEnd = min(fileSize, searchStart + Self.boundarySearchWindow)
+      let searchData = await dataSource.createSlice(from: searchStart, to: searchEnd)
+      if let boundary = parser.findRowBoundary(in: searchData, startingAt: 0) {
+        return searchStart + boundary
+      }
+      searchStart = searchEnd
     }
 
-    // If no boundary found, use the original offset
-    return nearOffset
+    return fileSize
   }
 
   private func readSequentially(dataSource: MemoryMappedFileDataSource, startTime: Date)

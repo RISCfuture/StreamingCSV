@@ -16,6 +16,15 @@ actor ProcessedRowsCounter {
   }
 }
 
+// Helper actor for recording rows in the order they arrive
+actor RowCollector {
+  private(set) var rows: [[String]] = []
+
+  func append(_ row: [String]) {
+    rows.append(row)
+  }
+}
+
 @Suite
 struct `ParallelCSVReader tests` {
 
@@ -206,6 +215,28 @@ struct `ParallelCSVReader tests` {
     #expect(result.rows[2] == ["", "2", "", "4"])
     #expect(result.rows[3] == ["", "", "", ""])
     #expect(result.rows[4] == ["5", "6", "7", "8"])
+  }
+
+  @Test
+  func `splits a parallelized file on row boundaries`() async throws {
+    // Every other test in this file stays under the size at which
+    // `MemoryMappedFileDataSource` allows chunking, and so only ever exercises
+    // the sequential fallback.
+    let filler = String(repeating: "x", count: 80)
+    let expected = (1...150_000).map { ["\($0)", "Item\($0)", filler] }
+    let url = try createTempCSVFile(
+      content: expected.map { $0.joined(separator: ",") }.joined(separator: "\n") + "\n"
+    )
+    defer { try? FileManager.default.removeItem(at: url) }
+
+    let reader = ParallelCSVReader(url: url, parallelism: 4)
+
+    let collector = RowCollector()
+    try await reader.processRows { await collector.append($0) }
+    #expect(await collector.rows == expected)
+
+    let result = try await reader.readAllRows()
+    #expect(result.totalRows == expected.count)
   }
 
   @Test
