@@ -1,4 +1,3 @@
-import MacroToolkit
 public import SwiftSyntax
 public import SwiftSyntaxMacros
 
